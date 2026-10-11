@@ -1,0 +1,473 @@
+/* Shared interface for the Cuvo Product Sandbox pages. Modelled on Linear: a side rail, plain rows,
+   one icon per status. Quiet on purpose: two colours carry meaning (in the app, built
+   first), everything else is neutral and told apart by shape.
+   Dark only (Cisco, 10 Oct 2026).
+   Works with no script; app.js only adds the counts and the meters. */
+
+:root {
+  color-scheme: dark;
+  --bg: #101113;
+  --surface: #17181b;
+  --line: #202226;
+  --track: #2a2d32;
+  --text: #e2e4e8;
+  --muted: #8b909a;
+  --faint: #5c616b;
+  --built: #5db08a;
+  --first: #e6bf4e;
+  /* How sure, on Input and Plan (Cisco, 10 Oct: "color code things by confidence"). Colour is
+     doubled by shape wherever it is used: solid is full, likely is full and quiet, shaky is
+     half, unknown is hollow. Solid shares the green of "in the app": settled ground. */
+  --solid: var(--built);
+  --likely: #8f97a6;
+  --shaky: #e0873c;
+  --unknown: #d8607a;
+}
+* { box-sizing: border-box; }
+html { background: var(--bg); }
+body {
+  margin: 0;
+  color: var(--text);
+  font: 400 14px/1.45 Inter, "Segoe UI", system-ui, sans-serif;
+  font-feature-settings: "cv11", "ss03", "tnum";
+  -webkit-font-smoothing: antialiased;
+}
+h1, h2, h3, p, ul, ol, fieldset { margin: 0; padding: 0; }
+ul, ol { list-style: none; }
+fieldset { border: 0; min-width: 0; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; border-radius: 4px; }
+label { position: relative; }
+input[type="radio"] { position: absolute; inset: 0 auto auto 0; opacity: 0; pointer-events: none; }
+
+/* ---------- status: one shape each; colour only for what exists and what is being built ---------- */
+[data-s="built"] { --c: var(--built); --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill-rule='evenodd' d='M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1Zm3.4 5.4a.9.9 0 0 0-1.3-1.2L7.1 8.5 5.9 7.3a.9.9 0 0 0-1.3 1.3l1.9 1.8c.4.3 1 .3 1.3-.1l3.6-3.9Z'/%3E%3C/svg%3E"); }
+[data-s="first"] { --c: var(--first); --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6.25' fill='none' stroke='%23000' stroke-width='1.5'/%3E%3Cpath d='M8 4.2a3.8 3.8 0 0 1 0 7.6Z'/%3E%3C/svg%3E"); }
+[data-s="named"] { --c: var(--muted); --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6.25' fill='none' stroke='%23000' stroke-width='1.5'/%3E%3C/svg%3E"); }
+[data-s="ask"] { --c: var(--text); --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.5' stroke-linejoin='round'%3E%3Cpath d='M8 1.6 14.4 8 8 14.4 1.6 8Z'/%3E%3C/svg%3E"); }
+[data-s="later"] { --c: var(--muted); --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='8' cy='8' r='6.25'/%3E%3Cpath d='M5.2 8h5.4M8.3 5.6 10.7 8l-2.4 2.4'/%3E%3C/svg%3E"); }
+[data-s="no"] { --c: var(--faint); --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%23000' stroke-width='1.5' stroke-linecap='round'%3E%3Ccircle cx='8' cy='8' r='6.25'/%3E%3Cpath d='m5.8 5.8 4.4 4.4m0-4.4-4.4 4.4'/%3E%3C/svg%3E"); }
+[data-s="old"] { --c: var(--faint); --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ccircle cx='8' cy='8' r='6.25' fill='none' stroke='%23000' stroke-width='1.5' stroke-dasharray='1.5 2.43' stroke-linecap='round'/%3E%3C/svg%3E"); }
+[data-s="all"] { --c: var(--muted); --i: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 3.6h12v1.4H2zm0 3.7h12v1.4H2zm0 3.7h12v1.4H2z'/%3E%3C/svg%3E"); }
+
+.st, .g li::before, .first li::before, .fns li::before {
+  content: "";
+  flex: none;
+  width: 14px;
+  height: 14px;
+  background: var(--c);
+  -webkit-mask: var(--i) center / contain no-repeat;
+  mask: var(--i) center / contain no-repeat;
+}
+
+/* ---------- frame ---------- */
+.app { display: grid; grid-template-columns: 248px minmax(0, 1fr); min-height: 100vh; }
+.side {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  height: 100vh;
+  overflow-y: auto;
+  padding: 20px 12px 18px;
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  font-size: 13px;
+}
+.brand { padding: 0 8px; font-size: 14px; }
+.brand strong { font-weight: 600; }
+.brand span { color: var(--muted); }
+.side h2 { padding: 0 8px 6px; font-size: 12px; font-weight: 400; color: var(--muted); }
+.side a, .filter label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 6px;
+  color: var(--muted);
+  cursor: pointer;
+}
+.side a:hover, .filter label:hover { color: var(--text); }
+.side a[aria-current], .filter label:has(:checked) { background: var(--surface); color: var(--text); }
+.filter label:has(:focus-visible) { outline: 2px solid var(--text); outline-offset: -2px; }
+.filter output { margin-left: auto; color: var(--muted); }
+.stamp { margin-top: auto; padding: 0 8px; color: var(--muted); font-size: 12px; }
+
+main { max-width: 1520px; padding: 30px clamp(16px, 3vw, 40px) 88px; min-width: 0; }
+.top { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; }
+h1 { font-size: 20px; font-weight: 600; letter-spacing: -.01em; }
+.promise { max-width: 60ch; margin-top: 4px; color: var(--muted); }
+
+.view { display: flex; flex: none; padding: 2px; border-radius: 8px; background: var(--surface); font-size: 13px; }
+.view legend { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.view span { display: block; padding: 3px 12px; border-radius: 6px; color: var(--muted); cursor: pointer; }
+.view span:hover { color: var(--text); }
+.view :checked + span { background: var(--track); color: var(--text); }
+.view :focus-visible + span { outline: 2px solid var(--text); }
+
+/* ---------- the first path: the one raised surface on the page ---------- */
+.first { margin-top: 26px; padding: 14px 18px 16px; border-radius: 10px; background: var(--surface); }
+.first h2 { font-size: 12px; font-weight: 400; color: var(--muted); }
+.first ol { display: flex; gap: 8px 0; margin-top: 8px; }
+.first li { display: flex; align-items: center; gap: 9px; font-weight: 500; white-space: nowrap; }
+.first li + li::after {
+  content: "";
+  order: -1;
+  flex: none;
+  width: 28px;
+  height: 1px;
+  margin: 0 14px;
+  background: var(--faint);
+}
+.first small { color: var(--muted); font-size: 13px; font-weight: 400; }
+@media (max-width: 1240px) {
+  .first ol { flex-direction: column; }
+  .first li + li::after { display: none; }
+}
+
+.band { margin: 44px 0 18px; font-size: 13px; font-weight: 400; color: var(--muted); }
+
+/* ---------- groups: board (default). Columns, no boxes; headers share one row so the
+   meters sit on one line across the board. ---------- */
+.groups { display: grid; gap: 40px 28px; align-items: start; }
+.stages { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.around { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.g { display: grid; grid-row: span 2; grid-template-rows: subgrid; row-gap: 0; scroll-margin-top: 20px; }
+.g > header {
+  display: grid;
+  grid-template: "h t" auto "p p" 1fr "m m" auto / minmax(0, 1fr) auto;
+  gap: 2px 10px;
+  align-items: baseline;
+}
+.g h3 { grid-area: h; display: flex; gap: 8px; font-size: 14px; font-weight: 600; }
+.g h3 b { font-weight: 400; color: var(--muted); }
+.g > header p { grid-area: p; color: var(--muted); font-size: 13px; }
+.tally { grid-area: t; color: var(--muted); font-size: 12px; white-space: nowrap; }
+.tally i { font-style: normal; }
+.meter {
+  grid-area: m;
+  height: 2px;
+  margin-top: 10px;
+  border-radius: 1px;
+  background: linear-gradient(to right,
+    var(--built) 0 var(--b, 0%),
+    var(--first) 0 calc(var(--b, 0%) + var(--f, 0%)),
+    var(--track) 0);
+}
+
+.g ul { display: grid; align-content: start; gap: 12px; padding-top: 16px; }
+.g li { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 1px 10px; align-items: start; transition: opacity .15s; }
+.g li::before { margin-top: 3px; }
+.g li strong { font-weight: 400; }
+.g li span { grid-column: 2; color: var(--muted); font-size: 12.5px; }
+.g li[data-s="first"] strong { font-weight: 500; }
+.g li[data-s="later"] strong, .g li[data-s="no"] strong, .g li[data-s="old"] strong { color: var(--muted); }
+@media (prefers-reduced-motion: reduce) { .g li { transition: none; } }
+
+/* ---------- groups: list ---------- */
+.app:has(#v-list:checked) .groups { display: block; }
+.app:has(#v-list:checked) .g { display: block; }
+.app:has(#v-list:checked) .g > header { grid-template: "h p t" auto "m m m" auto / auto minmax(0, 1fr) auto; gap: 0 14px; }
+.app:has(#v-list:checked) .g ul { display: block; padding: 0 0 40px; }
+.app:has(#v-list:checked) .g li {
+  grid-template-columns: 14px minmax(0, auto) minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+}
+.app:has(#v-list:checked) .g li::before { align-self: center; margin-top: 0; }
+.app:has(#v-list:checked) .g li span { grid-column: 3; font-size: 13px; }
+
+/* ---------- filter: the rest steps back, the map stays put ---------- */
+.app:has(#f-built:checked) .g li:not([data-s="built"]),
+.app:has(#f-first:checked) .g li:not([data-s="first"]),
+.app:has(#f-named:checked) .g li:not([data-s="named"]),
+.app:has(#f-ask:checked) .g li:not([data-s="ask"]),
+.app:has(#f-later:checked) .g li:not([data-s="later"]),
+.app:has(#f-no:checked) .g li:not([data-s="no"]),
+.app:has(#f-old:checked) .g li:not([data-s="old"]),
+.app:has(#f-built:checked) :is(.ph, .tag, .flow, .list .detail):not([data-s="built"]),
+.app:has(#f-first:checked) :is(.ph, .tag, .flow, .list .detail):not([data-s="first"]),
+.app:has(#f-named:checked) :is(.ph, .tag, .flow, .list .detail):not([data-s="named"]),
+.app:has(#f-ask:checked) :is(.ph, .tag, .flow, .list .detail):not([data-s="ask"]),
+.app:has(#f-later:checked) :is(.ph, .tag, .flow, .list .detail):not([data-s="later"]) { opacity: .22; }
+
+/* ---------- screens: the app seen from above ----------
+   An isometric floor. What is in the app stands on it as a solid block; what is still to
+   design is an outline drawn on it. Lines are the ways between screens. The page is written
+   by build-screens.py; picking a screen works with radio inputs and :has(), no script. */
+:root { --tile: #16181b; --face: #24272c; --edge: #3d424a; --wall: #181a1d; --way: #626975; }
+
+/* the title and the view switch sit in the floor's empty top corners */
+.screens .top { position: relative; z-index: 2; pointer-events: none; }
+.screens .top > * { pointer-events: auto; }
+.screens .promise { max-width: 38ch; }
+.stage { position: relative; margin-top: 16px; container: stage / inline-size; }
+@media (min-width: 1280px) { .stage { margin-top: -88px; } }
+
+/* the whole floor stays in view: no wider than the window is tall enough for */
+.map {
+  position: relative;
+  container-type: inline-size;
+  max-width: max(940px, calc((100vh - 80px) * var(--ratio)));
+  margin-inline: auto;
+}
+.scene { position: absolute; inset: 0; }
+.iso { display: block; width: 100%; height: 100%; overflow: visible; }
+.iso .tile { fill: var(--tile); }
+
+.flow { color: var(--way); transition: opacity .15s, color .15s; }
+.flow .l { fill: none; stroke: currentColor; stroke-width: 1.25px; vector-effect: non-scaling-stroke; }
+.flow.new .l { stroke-dasharray: 3 4; }
+.flow .h { fill: currentColor; }
+.flow.route { color: var(--first); }
+.flow.route .l { stroke-width: 2px; stroke-dasharray: none; }
+/* a shortcut the tab bar already gives: drawn only for a picked screen */
+.flow.quiet { visibility: hidden; }
+
+.ph, .tag { transition: opacity .15s; }
+.ph .shade { fill: #000; opacity: .5; filter: url(#soft); }
+.ph .wall { fill: var(--wall); }
+.ph .face { fill: var(--face); stroke: var(--edge); stroke-width: 1px; vector-effect: non-scaling-stroke; }
+.ph .ghost {
+  fill: color-mix(in srgb, var(--c) 5%, var(--tile));
+  stroke: var(--c);
+  stroke-width: 1.25px;
+  vector-effect: non-scaling-stroke;
+}
+.ph[data-s="first"] .ghost { stroke-width: 1.5px; }
+.ph[data-s="ask"] .ghost { stroke-dasharray: 1.5 4; stroke-linecap: round; }
+.ph[data-s="later"] .ghost { stroke-dasharray: 5 4; }
+.ph .ghost.under { fill: var(--tile); stroke-opacity: .55; }
+.wire .w { fill: #fff; opacity: .09; }
+.wire .w2 { fill: #fff; opacity: .2; }
+.wire .wo { fill: none; stroke: #fff; stroke-opacity: .17; stroke-width: 1px; vector-effect: non-scaling-stroke; }
+.wire .wh { fill: var(--first); opacity: .7; }
+.ph .ring { fill: none; stroke: var(--text); stroke-width: 1.5px; vector-effect: non-scaling-stroke; opacity: 0; transition: opacity .12s; }
+
+/* what lies flat over the floor: the place to click, each screen's name, each zone's name */
+.hit, .tag, .cap { position: absolute; left: calc(var(--x) * var(--u)); top: calc(var(--y) * var(--u)); }
+.hit {
+  width: calc(96 * var(--u));
+  height: calc(176 * var(--u));
+  border-radius: calc(14 * var(--u));
+  transform-origin: 0 0;
+  transform: matrix(.70711, .40825, -.70711, .40825, 0, 0);
+  cursor: pointer;
+}
+/* a name sits on its phone's near corner, its first line level with it; the type keeps
+   pace with the floor, and a long name takes two lines rather than cover the next arrow */
+.tag {
+  transform: translate(-50%, calc(-.67em - 1px));
+  display: flex;
+  align-items: flex-start;
+  gap: .4em;
+  padding: 1px .5em 1px .34em;
+  border-radius: 5px;
+  background: var(--bg);
+  font-size: clamp(10.5px, calc(17.5 * var(--u)), 13px);
+  font-weight: 500;
+  line-height: 1.34;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.tag .st { flex: none; width: 1em; height: 1em; margin-top: .17em; }
+.tag small { color: var(--muted); font-size: .92em; font-weight: 400; }
+.tag small.under { display: block; }
+.cap {
+  transform: translate(-50%, calc(-100% - 4px));
+  color: var(--muted);
+  font-size: clamp(10.5px, calc(16.8 * var(--u)), 12.5px);
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.cap b { margin-right: 5px; font-weight: 400; color: var(--faint); }
+
+/* a screen is picked: it, its ways and the screens at their other ends stay; the rest steps back */
+.app:has(.pick:checked) .ph { opacity: .34; }
+/* a label steps back by its ink, not its ground: a lit line never shows through one */
+.app:has(.pick:checked) .tag { --o: .5; }
+.tag > * { opacity: var(--o, 1); transition: opacity .15s; }
+/* the picked screen takes the rail: the status list steps aside for it */
+@media (min-width: 821px) { .app:has(.pick:checked) .side .filter { display: none; } }
+.app:has(.pick:checked) .flow { opacity: .16; }
+
+.key { position: absolute; right: 0; bottom: 0; display: grid; gap: 4px; color: var(--muted); font-size: 12px; }
+.key li { display: flex; align-items: center; gap: 8px; }
+.key svg { flex: none; width: 24px; height: 16px; }
+.k-face { fill: var(--face); stroke: var(--edge); }
+.k-side { fill: var(--wall); }
+.k-first { fill: none; stroke: var(--first); stroke-width: 1.5; }
+.k-new { fill: none; stroke: var(--muted); stroke-width: 1.2; }
+.k-way { fill: none; stroke: var(--way); stroke-width: 1.4; }
+.k-dash { stroke-dasharray: 3 3; }
+.k-tab { flex: none; width: 24px; font-size: 11px; text-align: center; }
+.k-head { fill: var(--way); }
+.k-route { fill: none; stroke: var(--first); stroke-width: 2; }
+.k-rhead { fill: var(--first); }
+
+/* one screen's details. In the rail: the picked screen. In the list: all of them. */
+.sheet {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  margin: -8px -4px 0;
+  padding: 18px 12px 4px;
+  border-top: 1px solid var(--line);
+  scrollbar-width: thin;
+  scrollbar-color: var(--track) transparent;
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 32px), transparent);
+}
+.sheet .detail { display: none; padding-bottom: 28px; }
+.app:has(#sc-none:checked) .sheet .intro { display: block; }
+.detail > header { position: relative; }
+.where { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; }
+.where em { display: none; font-style: normal; }
+.detail h3 { margin-top: 7px; font-size: 15px; font-weight: 600; letter-spacing: -.005em; color: var(--text); }
+.intro h3 { margin-top: 0; }
+.about { margin-top: 3px; color: var(--muted); }
+.today { margin-top: 6px; color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+.close { position: absolute; top: -4px; right: -6px; padding: 2px 6px; border-radius: 5px; color: var(--muted); font-size: 12px; cursor: pointer; }
+.close:hover { color: var(--text); background: var(--surface); }
+.part { margin-top: 18px; }
+.part h4 { margin: 0 0 8px; font-size: 12px; font-weight: 400; color: var(--muted); }
+.fns ul, .ways { display: grid; gap: 8px; }
+.fns li { display: grid; grid-template-columns: 14px minmax(0, 1fr); gap: 1px 9px; align-items: start; color: var(--text); }
+.fns li::before { margin-top: 2px; }
+.fns li strong { font-weight: 400; }
+.fns li span { grid-column: 2; color: var(--muted); font-size: 12px; }
+.fns li[data-s="later"] strong, .fns li[data-s="no"] strong, .fns li[data-s="old"] strong { color: var(--muted); }
+.ways li { display: grid; color: var(--text); }
+.ways label, .ways b { justify-self: start; font-weight: 500; }
+.ways label { cursor: pointer; }
+.ways label:hover { text-decoration: underline; text-underline-offset: 3px; }
+.ways span, .ways .none, .hint { color: var(--muted); font-size: 12px; }
+.hint { margin-top: 18px; }
+
+/* list view: every screen, by zone */
+.list { display: none; }
+.app:has(#v-list:checked) .list { display: block; }
+.app:has(#v-list:checked) .stage { display: none; }
+.zone { margin-top: 36px; }
+.zone:first-child { margin-top: 26px; }
+.zone > header {
+  display: grid;
+  grid-template: "h t" auto "m m" auto / minmax(0, 1fr) auto;
+  gap: 0 14px;
+  align-items: baseline;
+}
+.zone h2 { grid-area: h; display: flex; gap: 8px; font-size: 14px; font-weight: 600; }
+.zone h2 b { font-weight: 400; color: var(--muted); }
+.list .detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px 32px;
+  padding: 18px 0 20px;
+  border-bottom: 1px solid var(--line);
+  transition: opacity .15s;
+}
+.list .part { margin-top: 0; }
+.list .close { display: none; }
+@media (max-width: 1280px) { .list .detail { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+
+/* less room: the floor keeps its size and scrolls sideways */
+@container stage (max-width: 940px) {
+  .map-scroll { overflow-x: auto; scrollbar-width: thin; scrollbar-color: var(--track) transparent; }
+  .map { min-width: 940px; }
+}
+@media (prefers-reduced-motion: reduce) { .flow, .ph, .tag, .tag > *, .ph .ring, .list .detail { transition: none; } }
+
+/* ---------- narrower screens ---------- */
+@media (max-width: 1400px) { .tally i { display: none; } }
+@media (max-width: 1280px) {
+  .stages, .around { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+}
+@media (max-width: 820px) {
+  .app { display: block; }
+  .side { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); gap: 12px; padding: 14px 12px 12px; }
+  .side nav, .stamp, .side .sheet { display: none; }
+  .key { position: static; margin-top: 18px; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 6px 20px; }
+  .filter h2 { display: none; }
+  .filter { display: flex; flex-wrap: wrap; gap: 2px; }
+  .filter label { flex: none; }
+  .filter output { margin-left: 2px; }
+  .top { flex-direction: column; gap: 14px; }
+  .first li { white-space: normal; }
+  main { padding-top: 22px; overflow-x: clip; }
+  .tally i { display: inline; }
+  .app:has(#v-list:checked) .g > header { grid-template: "h t" auto "p p" auto "m m" auto / minmax(0, 1fr) auto; gap: 2px 10px; }
+  .app:has(#v-board:checked) .list { display: block; }
+  .app:has(#v-board:checked) .zone { display: contents; }
+  .app:has(#v-board:checked) .zone > header { display: none; }
+  .app:has(#v-board:checked) .list .detail { display: none; margin-top: 14px; padding: 16px; border: 0; border-radius: 10px; background: var(--surface); }
+  .app:has(#v-board:checked) .list .close { display: block; top: -2px; right: -4px; }
+  .list .detail { grid-template-columns: minmax(0, 1fr); }
+  .app:has(#v-list:checked) .g li { grid-template-columns: 14px minmax(0, 1fr); }
+  .app:has(#v-list:checked) .g li span { grid-column: 2; }
+}
+@media (max-width: 560px) {
+  .filter { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+}
+@media print {
+  .side, .view { display: none; }
+  .app { display: block; }
+  .g { break-inside: avoid; }
+}
+
+/* ---------- how sure: the confidence marks ----------
+   One mark in four forms, so that colour never says it alone: solid is a full disc, likely a
+   full one drawn smaller, shaky a ring half filled, unknown an empty ring. Only solid is
+   settled, which is why likely is the quieter of the two full ones.
+   Anything that wears data-c has its colour in --c; --cm on any parent sets the size of the
+   marks inside. A mark is a round box of that size whatever its form, so an outline on it
+   shows a pick.
+   After the marks comes what the pages that wear them share: a row named in a sentence, a
+   section with its heading, and the frame on a narrow screen. */
+[data-c="solid"] { --c: var(--solid); }
+[data-c="likely"] { --c: var(--likely); }
+[data-c="shaky"] { --c: var(--shaky); }
+[data-c="unknown"] { --c: var(--unknown); }
+.cm { display: inline-block; flex: none; width: var(--cm, 10px); height: var(--cm, 10px); border-radius: 50%; vertical-align: -1px; }
+.cm[data-c="solid"] { background: var(--c); }
+.cm[data-c="likely"]::before { content: ""; display: block; height: 100%; border-radius: 50%; background: var(--c); transform: scale(.6); }
+.cm[data-c="shaky"] { background: linear-gradient(to top, var(--c) 50%, transparent 0); box-shadow: inset 0 0 0 1.5px var(--c); }
+.cm[data-c="unknown"] { box-shadow: inset 0 0 0 1.5px var(--c); }
+.cm-w { white-space: nowrap; }                                  /* a mark and its word: no line ends on the mark */
+.filter .cm { margin: 0 calc((14px - var(--cm, 10px)) / 2); }   /* in the rail it takes the place of a status icon */
+.cm-f { fill: var(--c); stroke: none; }
+.cm-o { fill: none; stroke: var(--c); stroke-width: 1.5px; }
+@media (forced-colors: active) {
+  [data-c] { --c: CanvasText; }
+  .cm { forced-color-adjust: none; }
+}
+
+/* a row named in a sentence: a quiet link, never a row of the rail. The link is 24px tall and
+   so is any line it stands on (1.21em is the height of Inter's own box), so two of them on
+   neighbouring lines each keep a full 24px to hit and neither reaches into the other. A list
+   made of such names reads evenly when its own lines are set 24px apart as well. */
+.ref, .side .ref { display: inline; height: auto; padding: calc((24px - 1.21em) / 2) 0; line-height: 24px; color: inherit; cursor: pointer; text-decoration: underline; text-decoration-color: var(--faint); text-underline-offset: 3px; }
+.ref:hover, .side .ref:hover { color: var(--text); text-decoration-color: currentColor; }
+
+/* a page's sections under its picture: one size of heading, and one measure for the short
+   version that opens a section and for the foot that says what is not drawn */
+.app .sec { margin-top: 72px; }
+.app .sec h2 { font-size: 16px; font-weight: 600; letter-spacing: -.005em; }
+.app .short { max-width: 88ch; margin-top: 4px; color: var(--muted); }
+.app .foot { max-width: 88ch; margin-top: 64px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
+
+/* a narrow screen: the rail folds away, and the way to the other pages stays, as one row under
+   the name. Where the Show list is the key to the marks, every level stays in view. */
+@media (max-width: 820px) {
+  .side nav[aria-label="Pages"] { display: flex; flex-wrap: wrap; gap: 2px; margin-block: -4px; }
+  .side nav[aria-label="Pages"] h2 { display: none; }
+  .side nav[aria-label="Pages"] a:focus-visible { outline-offset: -2px; }   /* side by side: the ring stays inside its own link */
+  .app .sec { margin-top: 56px; }
+}
+@media (max-width: 560px) {
+  .filter:has(.cm) { flex-wrap: wrap; overflow-x: visible; }
+  .filter:has(.cm) label { gap: 8px; }
+}
