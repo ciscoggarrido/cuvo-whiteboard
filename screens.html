@@ -72,8 +72,19 @@
     if (at) { history.replaceState(null, '', location.pathname + location.search); location.hash = at; }
   }
 
+  // A page written while this one is still being read is added under the form, not put in its
+  // place. So the kept key waits for the end of the read, and the form stays out of sight meanwhile.
+  const read = new Promise(done => {
+    const after = () => setTimeout(done, 0);
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', after, { once: true });
+    else after();
+  });
+  const main = document.querySelector('main');
   const before = kept();
-  if (before) open(before).then(show, forget);
+  if (before) {
+    main.hidden = true;
+    Promise.all([open(before), read]).then(([page]) => show(page), () => { forget(); main.hidden = false; });
+  }
 
   form.addEventListener('submit', async event => {
     event.preventDefault();
