@@ -425,8 +425,8 @@ h1 { font-size: 20px; font-weight: 600; letter-spacing: -.01em; }
    Anything that wears data-c has its colour in --c; --cm on any parent sets the size of the
    marks inside. A mark is a round box of that size whatever its form, so an outline on it
    shows a pick.
-   After the marks comes what the pages that wear them share: a row named in a sentence, a
-   section with its heading, and the frame on a narrow screen. */
+   After the marks comes what the pages that wear them share: the ink of what steps back, a
+   row named in a sentence, a section with its heading, and the frame on a narrow screen. */
 [data-c="solid"] { --c: var(--solid); }
 [data-c="likely"] { --c: var(--likely); }
 [data-c="shaky"] { --c: var(--shaky); }
@@ -444,6 +444,21 @@ h1 { font-size: 20px; font-weight: 600; letter-spacing: -.01em; }
   [data-c] { --c: CanvasText; }
   .cm { forced-color-adjust: none; }
 }
+
+/* what steps back is still read, and still picked. While one level, one pick or one road is
+   shown, the rest steps back to a single ink, --stepped: 3.48 to 1 on the ground and 3.27 to 1
+   on a raised or hovered row, and no line that can be read or picked goes under it (3 to 1 is
+   the least).
+   A line steps back by its ink, never by opacity: opacity takes a quiet note in the line down
+   with it, to under 2 to 1. So the line takes --stepped for its own text and points the ink
+   tokens at it for everything inside, in one rule:
+     color: var(--stepped); --text: var(--stepped); --muted: var(--stepped); --faint: var(--stepped); --cm-thin: var(--stepped-mark);
+   A name that steps back by degrees mixes towards --stepped, not towards the ground: then no
+   product of degrees, however small, takes it under the floor.
+   A mark is not text and its level is said in words beside it or over it: it keeps its
+   colour and form and thins by --cm-thin, set on any parent. */
+:root { --stepped: #666a71; --stepped-mark: .5; }
+.cm { opacity: var(--cm-thin, 1); }
 
 /* a row named in a sentence: a quiet link, never a row of the rail. The link is 24px tall and
    so is any line it stands on (1.21em is the height of Inter's own box), so two of them on
