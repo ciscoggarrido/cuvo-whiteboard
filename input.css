@@ -1,110 +1,99 @@
-/* The Input page: what to answer next, how sure the product is, where its words disagree, and
-   every question. Its markup is written by build-input.py into the Sandbox's frame (app.css).
+/* The Input page, inside the frame (app.css gives the colours, the type and the marks for how
+   sure). Two things stand on it: the queue, which queue.css draws, and a chart with one row for
+   each area. Side by side where the window has room, one under the other where it has not.
 
-   Colour is how sure, and nothing else: --solid, --likely, --shaky, --unknown, each doubled by
-   the form of its mark (app.css, last section). Everything that opens is the browser's own
-   <details> and every pick is a link or a radio input, so the page reads, opens and filters
-   with no script. Nothing here is under 12px. Whatever can be picked is 24px or more to hit:
-   a row, a line, a link with room around it.
+   In the chart, colour is how sure and nothing else, each level doubled by the form of its
+   mark. A row is the browser's own <details>: it opens with no script, by pointer or by key.
+   Nothing here is under 12px.
 
-   A level picked under Show is read once, at the rail (.side:has(...) ~ main). In the chart it
-   dims whole groups of marks, never single marks: a pick must not send every mark through
-   style. A line of another level steps back by its ink, never by opacity, so that no word of
-   it goes under 3 to 1 (app.css, --stepped). */
+   In order: the desk, the two labels, the queue's column, the chart (its heads and rows, as a
+   table and as blocks), an opened row, the key. */
 
-.input .promise { max-width: 104ch; }
-.input dl, .input dd, .input blockquote, .input h4, .input figure { margin: 0; padding: 0; }
-.input summary { cursor: pointer; list-style: none; }
-.input summary::-webkit-details-marker { display: none; }
-.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-
-/* a link in running text is quiet. It is 24px tall and so is the line it stands on, the
-   Sandbox's own measure for a row named in a sentence (app.css, .ref): two on neighbouring
-   lines each keep 24px of their own to hit. A row that is a link shows it on hover. */
-.lk { padding: calc((24px - 1.21em) / 2) 5px; margin-inline: -5px; line-height: 24px; cursor: pointer; text-decoration: underline; text-decoration-color: var(--faint); text-underline-offset: 3px; }
-.lk:hover { color: var(--text); text-decoration-color: currentColor; }
-.hd { color: var(--muted); white-space: nowrap; }                     /* a question's handle: quiet, and never broken at its dash */
-.label { font-size: 13px; font-weight: 500; }
-.label span { margin-left: 10px; font-size: 12px; font-weight: 400; color: var(--muted); }
-.jump { display: none; }
-
-/* ---------- the desk: the question to answer next, and the picture beside it ----------
-   Two columns from 1280px. The picture keeps the 624px its bars need and the question takes
-   the rest: 300px at 1280, about a third of the page from 1340. */
-.desk { margin-top: 22px; }
-.picture { margin-top: 40px; }
+/* ---------- the desk ---------- */
+.desk { margin-top: var(--s-6); }
+.asking, .sure { min-width: 0; }
+.sure { margin-top: var(--s-8); }
 @media (min-width: 1280px) {
-  .desk { display: grid; grid-template-columns: minmax(300px, 1fr) minmax(624px, 62.2%); column-gap: clamp(28px, calc(28px + (100vw - 1280px) * .27), 44px); align-items: start; }
-  .picture { margin-top: 0; }
+  .desk { display: grid; grid-template-columns: minmax(0, 1fr) minmax(508px, 1fr); column-gap: clamp(32px, 3.4vw, 64px); align-items: start; }
+  .sure { margin-top: 0; }
 }
 
-.ask-q { margin-top: 8px; max-width: 30em; font-size: 21px; font-weight: 600; line-height: 1.3; letter-spacing: -.012em; text-wrap: balance; }
-@media (min-width: 1280px) and (max-width: 1379.9px) { .ask-q { font-size: 19px; } }
-.ask-meta { margin-top: 10px; color: var(--muted); font-size: 13px; }
-.ask-why { margin-top: 12px; max-width: 64ch; }
-.ask h3 { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0 16px; margin-top: 18px; max-width: 64ch; font-size: 12px; font-weight: 400; color: var(--muted); }
-.roads { display: grid; gap: 12px; margin-top: 8px; max-width: 64ch; }
-.roads dt { font-weight: 500; }
-.roads dd { margin-top: 1px; color: var(--muted); font-size: 13px; }
-.roads .note, .out { color: var(--muted); font-size: 12px; }
-.roads .note { display: block; margin-top: 2px; }                     /* whose a road is, and his words where it is his */
-.out { margin-top: 8px; }
-.how { margin-top: 16px; padding-top: 10px; border-top: 1px solid var(--line); max-width: 64ch; color: var(--muted); font-size: 13px; }
-.how strong { font-weight: 400; color: var(--text); white-space: nowrap; }   /* the handle to name: never broken at its dash */
+/* a label: the name of one of the two things, and one quiet line that says how to read it */
+.label { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+.label h2 { font-size: var(--t-small); font-weight: 500; }
+.label p { font-size: var(--t-note); color: var(--muted); }
 
-/* what one answer settles: each a row that leads to it. Its kind, its mark where it has one, its name */
-.reach { margin-top: 4px; max-width: 84ch; font-size: 13px; }
-.reach a { display: grid; grid-template-columns: 4.6em 12px minmax(0, 1fr); gap: 0 8px; align-items: baseline; margin-inline: -8px; padding: 3px 8px; border-radius: 6px; }
-.reach a:hover { background: var(--surface); }
-.reach .k { color: var(--muted); font-size: 12px; }
-.reach .cm { align-self: start; margin-top: 5px; }
-.reach .v { grid-column: 3; }
-.reach .v > span { color: var(--muted); font-size: 12px; white-space: nowrap; }
+/* ---------- the queue's column ---------- */
+/* One measure wide at every width, which is where the queue stops its own answers: the folds
+   under the card and the lists inside them then end on the same edge as the answers. */
+.asking { max-width: 600px; }
+/* beside the chart the question is set a step larger than on a phone */
+.asking .queue { margin-top: 0; }
+@media (min-width: 1440px) {
+  .asking .q-ask { font-size: 26px; line-height: 1.2; letter-spacing: -.017em; }
+}
+/* Once the queue runs, the list of everything is an index: a question and the way to its card,
+   where it is read in full. An item that offers no way to a card keeps its full text, because
+   the list is then the only place to read it. With no script the list is in full. */
+.queue[data-live] .q-all .q-item:has(> .q-item-go button) > :is(.q-why, .q-item-opts, .q-lead) { display: none; }
+.queue[data-live] .q-all .q-item:has(> .q-item-go button) { padding-block: 11px; }
+/* the way keeps its height for a finger and takes a line's worth of room */
+.queue[data-live] .q-all .q-item:has(> .q-item-go button) .q-link { min-height: 0; margin-block: -9px; padding-block: 10px; }
+/* the place a link has just named is picked out, with a little room above it: in the list (by
+   the address when no script runs, by a class when one does) and among what is held */
+.q-item { scroll-margin-top: var(--s-5); }
+.q-item:target, .q-item.landed, .held-part li:target { background: var(--surface); box-shadow: -8px 0 0 var(--surface), 8px 0 0 var(--surface); }
 
-/* then, in this order: the next few in line */
-.then { margin-top: 26px; padding-top: 16px; border-top: 1px solid var(--line); }
-.then ol { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 4px 28px; margin-top: 6px; }
-.then li a { display: grid; grid-template-columns: 1.2em minmax(0, 1fr); gap: 2px 8px; height: 100%; align-content: start; padding: 6px 8px; margin: 0 -8px; border-radius: 6px; font-size: 13px; }
-.then li a:hover { background: var(--surface); }
-.then b { font-weight: 400; color: var(--muted); }
-.then i { grid-column: 2; font-style: normal; color: var(--muted); font-size: 12px; }
-.then .all { margin-top: 8px; font-size: 13px; color: var(--muted); }
+/* what is held: a fold like the queue's own, and inside it a list set like the list of all questions */
+.held { max-width: 74ch; padding-bottom: 6px; }
+.held-how { color: var(--muted); }
+.held-part { margin-top: 24px; }
+.held-part > h3 { color: var(--muted); font-size: var(--t-small); font-weight: 500; }
+.held-part li { padding: 14px 0; border-bottom: 1px solid var(--line); scroll-margin-top: var(--s-5); }
+.held-part:last-child li:last-child { border-bottom: 0; }
+.held-part h4 { margin: 0; font-size: var(--t-lead); font-weight: 600; line-height: 1.35; }
+.held-part p { margin-top: 3px; color: var(--muted); font-size: var(--t-body); line-height: 1.45; }
 
-/* ---------- the picture: one mark for every statement, an area to a row ----------
-   --c1, --c2, --c3 are how many columns of marks the widest row needs in each zone, and --high
-   how many marks stand in a column: build-input.py works them out from the brain. --p is the
-   pitch of a mark; the steps that raise it with the window are set in the page, worked out too.
-   A row is a link to its sheet, which opens under the whole desk: the chart stays in one piece.
-   The marks of a level are one group (.marks), so a level is dimmed as one thing. */
-.picture { container: pic / inline-size; min-width: 0; }
+/* ---------- the chart: one mark for every line, an area to a row ----------
+   --c1, --c2 and --c3 are how many columns of marks the widest row needs in each zone, and
+   --high how many marks stand in a column: the page sets them on the chart. --p is the pitch
+   of a mark; the steps that raise it with the chart's own width are set in the page too.
+   The marks of a level are one group (.marks). */
+.sure { container: sure / inline-size; }
 .chart { --p: 11px; --cm: calc(var(--p) - 2px); --num: 17px; margin-top: 10px; }
-.heads { color: var(--muted); font-size: 12px; }
+/* no wider than its marks ask for, with the name at its widest (200px). The zone that needs an
+   answer is never narrower than the words over it. */
+.chart { max-width: calc(342px + (var(--c1) + var(--c2)) * var(--p) + max(37px + var(--c3) * var(--p), 186px)); }
+.heads, .area > summary { font-variant-numeric: tabular-nums; }      /* figures in columns keep one width */
+.heads { color: var(--muted); font-size: var(--t-note); }
 .heads p { white-space: nowrap; }
 .heads strong { font-weight: 500; color: var(--text); }
-.heads .n, .heads .sub { color: var(--muted); }
 .heads .cm { --cm: 9px; margin-right: 4px; }
-.row { border-radius: 6px; font-size: 13px; font-weight: 500; }
-.row:hover { background: var(--surface); }
-.row:hover .nm span { text-decoration: underline; text-decoration-color: var(--faint); text-underline-offset: 4px; }
-.row:focus-visible { outline-offset: 1px; }
-.nm { display: flex; gap: 8px; align-items: baseline; white-space: nowrap; }
+.area > summary { border-radius: 6px; font-size: var(--t-small); font-weight: 500; cursor: pointer; list-style: none; }
+.area > summary::-webkit-details-marker { display: none; }
+.area > summary:focus-visible { outline-offset: 1px; border-radius: 6px; }
+.nm { display: flex; gap: 8px; align-items: baseline; font-size: inherit; font-weight: inherit; white-space: nowrap; }
 .nm b { font-weight: 400; color: var(--muted); }
-.z > b { font-size: 12px; font-weight: 400; color: var(--muted); }
-.marks { transition: opacity .15s; }
-.z-q small { display: block; color: var(--muted); font-size: 12px; font-weight: 400; }
-.row.gap, .bare { border-top: 1px solid var(--line); }
-.bare > p { padding: 10px 0 2px; color: var(--muted); font-size: 12px; }
+.z > b { font-size: var(--t-note); font-weight: 400; color: var(--muted); }
+.z-q small { display: block; color: var(--muted); font-size: var(--t-note); font-weight: 400; }
+.area.gap { border-top: 1px solid var(--line); }
+.area[open] > summary { background: var(--surface); }
+.area[open] > summary .nm { font-weight: 600; }
+@media (hover: hover) {
+  .area > summary:hover { background: var(--surface); }
+  .area > summary:hover .nm span { text-decoration: underline; text-decoration-color: var(--faint); text-underline-offset: 4px; }
+}
 
 /* wide enough: the rows are a table of small bars, and one line parts what needs an answer */
-@container pic (min-width: 624px) {
-  .heads, .row {
+@container sure (min-width: 508px) {
+  .heads, .area > summary {
     display: grid;
     grid-template-columns:
-      minmax(91px, 200px)
+      minmax(91px, 1fr)
       calc(var(--num) + 5px + var(--c1) * var(--p))
       calc(var(--num) + 13px + var(--c2) * var(--p))
-      calc(var(--num) + 20px + var(--c3) * var(--p))
-      46px;
+      max(calc(var(--num) + 20px + var(--c3) * var(--p)), 186px)
+      58px;
     column-gap: 8px;
   }
   .heads { align-items: start; padding-bottom: 6px; }
@@ -115,22 +104,20 @@
   .z > b { flex: none; width: var(--num); text-align: right; }
   .bar { display: flex; gap: 4px; }                                  /* shaky, then unknown: two groups, told apart */
   .marks { display: grid; grid-auto-flow: column; grid-template-rows: repeat(var(--high), var(--p)); grid-auto-columns: var(--p); place-items: center; }
-  .z-soft { padding-left: 10px; border-left: 1px solid var(--edge, var(--faint)); }
-  .z-q { flex-direction: column; align-items: flex-end; justify-content: center; gap: 0; }
+  .z-soft { padding-left: 10px; border-left: 1px solid var(--edge); }
+  .z-q { flex-direction: column; align-items: flex-end; justify-content: center; gap: 0; padding-right: 2px; }
   .z-q > b { width: auto; }
-  .heads .h-q { display: flex; justify-content: flex-end; }
-  .bare .row { min-height: 30px; }
-  .bare .row .z-q { grid-column: 5; }
-  .bare .row .nm { grid-column: 1 / 5; }
+  .heads .h-q { display: flex; justify-content: flex-end; padding-right: 2px; }
 }
-/* narrower: an area is a block of three bars, each with its name; the marks run on as text does */
-@container pic (max-width: 623.9px) {
+/* narrower: an area is a block of bars, each with its name; the marks run on as text does */
+@container sure (max-width: 507.9px) {
   .heads { display: flex; flex-wrap: wrap; gap: 2px 18px; padding-bottom: 6px; }
   .heads .h-name, .heads .h-q { display: none; }
   .chart { --p: 13px; }
-  .row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; padding: 10px 0; }
-  .nm { grid-column: 1; font-size: 14px; }
+  .area > summary { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 12px; margin-inline: -8px; padding: 10px 8px; }
+  .nm { grid-column: 1; font-size: var(--t-body); }
   .z { grid-column: 1 / -1; display: grid; grid-template-columns: 9.5em minmax(0, 1fr); gap: 8px; align-items: start; }
+  .z.none { display: none; }
   .z > b { white-space: nowrap; }
   .z .vh { position: static; width: auto; height: auto; overflow: visible; clip-path: none; }
   .bar { padding-top: 3px; line-height: 0; }
@@ -139,225 +126,33 @@
   .marks .cm { margin: 0 3px 3px 0; vertical-align: top; }
   .z-q { grid-column: 2; grid-row: 1; display: block; text-align: right; }
   .z-q small { display: inline; }
-  .row + .row { border-top: 1px solid var(--line); }
+  .area + .area { border-top: 1px solid var(--line); }
 }
 
-/* the Show list in the rail: one level alone, the rest is dimmed and stays in place */
-.side:has(#f-solid:checked) ~ main .marks:not(.m-solid),
-.side:has(#f-likely:checked) ~ main .marks:not(.m-likely),
-.side:has(#f-shaky:checked) ~ main .marks:not(.m-shaky),
-.side:has(#f-unknown:checked) ~ main .marks:not(.m-unknown) { opacity: .16; }
-/* a line of another level steps back: it is still to be read and picked, and opened it is read
-   in full. It takes the one ink the Sandbox keeps for what steps back (app.css, --stepped: 3.48
-   to 1 on the ground) for all of its words, the quiet ones too, and its mark thins. Opacity
-   would take a quiet note in the line down to under 2 to 1. A statement goes by its own level;
-   a question by the levels of the statements its answer would settle, so one about words or
-   the plan alone steps back under every level; a fold of a sheet, while it is closed, by the
-   levels of what it holds. */
-.side:has(#f-solid:checked) ~ main .s:not([data-c="solid"]):not([open]),
-.side:has(#f-likely:checked) ~ main .s:not([data-c="likely"]):not([open]),
-.side:has(#f-shaky:checked) ~ main .s:not([data-c="shaky"]):not([open]),
-.side:has(#f-unknown:checked) ~ main .s:not([data-c="unknown"]):not([open]),
-.side:has(#f-solid:checked) ~ main .q:not(.l-solid):not([open]),
-.side:has(#f-likely:checked) ~ main .q:not(.l-likely):not([open]),
-.side:has(#f-shaky:checked) ~ main .q:not(.l-shaky):not([open]),
-.side:has(#f-unknown:checked) ~ main .q:not(.l-unknown):not([open]),
-.side:has(#f-solid:checked) ~ main .qref:not(.l-solid),
-.side:has(#f-likely:checked) ~ main .qref:not(.l-likely),
-.side:has(#f-shaky:checked) ~ main .qref:not(.l-shaky),
-.side:has(#f-unknown:checked) ~ main .qref:not(.l-unknown),
-.side:has(#f-solid:checked) ~ main .lvl:not(.l-solid):not([open]),
-.side:has(#f-likely:checked) ~ main .lvl:not(.l-likely):not([open]),
-.side:has(#f-shaky:checked) ~ main .lvl:not(.l-shaky):not([open]),
-.side:has(#f-unknown:checked) ~ main .lvl:not(.l-unknown):not([open]) { color: var(--stepped); --text: var(--stepped); --muted: var(--stepped); --faint: var(--stepped); --cm-thin: var(--stepped-mark); }   /* the fold itself: a rule that ended in a bare "summary" would restyle every summary on the page at each pick */
-/* what the pick does, and what it cannot do, said under the list while a level is picked */
-.filter .dims { display: none; padding: 6px 8px 0; color: var(--muted); font-size: 12px; }
-.filter:has(:checked:not(#f-all)) .dims { display: block; }
+/* ---------- an opened row: its lines in plain words, grouped by how sure ----------
+   Each line wears the mark it has in the row above, so a mark there is a line here. */
+.lines { --cm: 10px; padding: 10px 2px 22px; font-size: var(--t-small); }
+.covers { color: var(--muted); }
+.lvl { margin-top: 14px; }
+.lvl h4 { margin: 0; font-size: var(--t-small); font-weight: 500; }
+.lvl h4 b { margin-left: 6px; font-weight: 400; color: var(--muted); }
+.lvl ul { display: grid; gap: 7px; max-width: 72ch; margin-top: 7px; }
+.lvl li { display: grid; grid-template-columns: 10px minmax(0, 1fr); column-gap: 10px; align-items: start; }
+.lvl li > .cm { margin-top: 4px; }
+.lvl .dash { width: 6px; height: 1px; margin: 9px 2px 0; background: var(--muted); }
+.lvl:not([data-c]) li { color: var(--muted); }                       /* held: not asked yet, so it steps back */
+/* a line that is a link: 24px to hit on each of its lines, without moving the lines round it */
+.lvl li a { padding-block: 4px; }
+.lvl li a:focus-visible { outline-offset: 0; }
+.tag { color: var(--muted); font-size: var(--t-note); white-space: nowrap; }
 
-/* the key under the picture. A line of it picks its level in the Show list, as the rail does */
-.legend { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0 28px; margin-top: 16px; padding-top: 10px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
-.legend label:not(.lk) { display: grid; grid-template-columns: 12px minmax(0, 1fr); gap: 8px; align-items: baseline; height: 100%; margin-inline: -8px; padding: 4px 8px; border-radius: 6px; cursor: pointer; }
-.legend label:not(.lk):hover,
-.side:has(#f-solid:checked) ~ main .legend [for="f-solid"],
-.side:has(#f-likely:checked) ~ main .legend [for="f-likely"],
-.side:has(#f-shaky:checked) ~ main .legend [for="f-shaky"],
-.side:has(#f-unknown:checked) ~ main .legend [for="f-unknown"] { background: var(--surface); }
+/* ---------- the key: what each mark means, and what the chart leaves out ----------
+   It stands inside the chart's own box, under the rows, so the two are one width. */
+.key { margin-top: 16px; padding-top: 10px; border-top: 1px solid var(--line); color: var(--muted); font-size: var(--t-note); }
+.legend { --cm: 10px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 4px 28px; }
+.legend li { display: grid; grid-template-columns: 12px minmax(0, 1fr); gap: 8px; align-items: baseline; }
 .legend .cm { align-self: start; margin-top: 4px; }
 .legend strong { font-weight: 400; color: var(--text); }
-.legend .wide, .legend .reset { grid-column: 1 / -1; }
-.legend .wide { margin-top: 6px; }
-.legend .reset { display: none; padding: 5px 0 1px; }
-.side:has(.filter :checked:not(#f-all)) ~ main .legend .reset { display: block; }
+.notes { margin-top: 8px; }
 
-/* ---------- an area's sheet: under the whole desk, across the page, one at a time ----------
-   A row of the chart leads to what a sheet holds, and that opens the sheet with no script.
-   Closed, a sheet takes no room and no tab stop, and the browser still finds its words. Open,
-   its name stays at the top of the window while its statements are read: the name alone, so
-   the bar is one line, 46px, on any screen, and what lands under it is measured from that.
-   One closed sheet keeps its name, with no script: the one that holds what the address names.
-   A browser that does not open it by itself then leaves the name to open it by hand; the cost
-   is that the name stays after Hide, for as long as the address names the sheet. input.js
-   opens what the address names in every browser, and says so with a word on the page
-   (scripted): there no closed sheet shows a name, whatever the address last named. */
-.area:not([open]):not(:has(:target)) > summary, .scripted .area:not([open]) > summary { visibility: hidden; height: 0; padding: 0; border: 0; overflow: hidden; }
-.area[open], .area:has(:target) { margin-top: 40px; }
-.scripted .area:not([open]) { margin-top: 0; }
-.area > summary { display: flex; align-items: baseline; gap: 0 12px; margin-inline: -8px; padding: 12px 8px 10px; border-top: 1px solid var(--line); }   /* as wide as the lines that pass under it */
-.area[open] > summary { position: sticky; top: 0; z-index: 2; background: var(--bg); box-shadow: 0 1px 0 var(--line); }
-.area > summary:focus-visible { outline-offset: -2px; }
-.area > summary h3 { font-size: 16px; font-weight: 600; letter-spacing: -.005em; }
-.area > summary::after { content: "Show"; margin-left: auto; padding-left: 12px; color: var(--muted); font-size: 12px; }
-.area[open] > summary::after { content: "Hide"; }
-.area > summary:hover::after { color: var(--text); }
-.sheet-in { padding: 12px 0 4px; }
-/* Nothing takes focus under that name. The margin is more than the name's 46px because a
-   browser may leave a line where it stands while a line's height of it shows past the margin
-   (Firefox does): at 84px a line of one or two rows that stays is clear of the name. It is
-   no more than that because the first line of a sheet starts 86px under the sheet's top, and
-   a larger margin would shift the page when focus first goes into a sheet. */
-.sheet-in a, .sheet-in summary { scroll-margin-top: 84px; }
-.covers { color: var(--muted); font-size: 13px; }                    /* what the area covers, then its count */
-.covers span { color: var(--text); }
-.back { margin-top: 20px; color: var(--muted); font-size: 13px; }
-.sheet-in h4, .lvl > summary { margin-top: 18px; font-size: 13px; font-weight: 500; }
-.sheet-in h4 b, .lvl > summary b { margin-left: 4px; font-weight: 400; color: var(--muted); }
-.sheet-in h4 span, .lvl > summary span { margin-left: 10px; font-weight: 400; color: var(--muted); font-size: 12px; }
-.lvl > summary { display: flex; align-items: baseline; flex-wrap: wrap; padding: 4px 8px; margin-inline: -8px; border-radius: 6px; }
-.lvl > summary:hover, .qref:hover, .s > summary:hover, .q > summary:hover { background: var(--surface); }
-.lvl > summary .cm { margin-right: 8px; align-self: center; }
-.lvl > summary::after { content: "Show"; margin-left: auto; padding-left: 12px; color: var(--muted); font-size: 12px; font-weight: 400; }
-.lvl[open] > summary::after { content: "Hide"; }
-
-.qref { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 0 10px; align-items: baseline; margin: 10px -8px 0; padding: 5px 8px; border-radius: 6px; font-size: 13px; }
-.qref b { color: var(--muted); font-size: 12px; font-weight: 400; text-align: right; }
-.qref span { font-weight: 500; }
-.qref i { font-style: normal; color: var(--muted); font-size: 12px; white-space: nowrap; }
-.lines { margin-left: 46px; }
-.lvl .lines { margin-left: 0; }
-.lvl .qref + .lines { margin-left: 46px; }                            /* the questions that fold keep their statements under them */
-.s > summary { display: grid; grid-template-columns: 12px minmax(0, 1fr) auto; gap: 0 10px; align-items: baseline; margin-inline: -8px; padding: 4px 8px; border-radius: 6px; font-size: 13px; }
-.s > summary .cm { align-self: start; margin-top: 5px; }
-.s > summary .also { color: var(--muted); font-size: 12px; white-space: nowrap; }
-.s[open] > summary, .q[open] > summary { background: var(--surface); }
-.more { display: grid; gap: 8px; margin: 6px 0 14px 22px; max-width: 78ch; font-size: 13px; }
-.more .k { display: block; color: var(--muted); font-size: 12px; }
-.more blockquote { margin-top: 4px; padding-left: 10px; border-left: 1px solid var(--track); color: var(--muted); }
-
-/* what a link has just named */
-.s:target > summary, .q:target > summary, .x:target > summary, .ans:target, .words tr:target > th, .old li:target { background: var(--surface); }
-.ans:target, .words tr:target > th, .old li:target { box-shadow: -8px 0 0 var(--surface), 8px 0 0 var(--surface); }
-.input :target { scroll-margin-top: 64px; }
-.input .sheet-in:target { scroll-margin-top: 46px; }                  /* a sheet: its name, stuck above it, stays in sight */
-.input .sheet-in :target { scroll-margin-top: 52px; }                 /* a line of it: right under that name, no line cut in half above it */
-
-/* ---------- the sections under the desk (their heading, short version and foot: app.css) ---------- */
-.short strong { font-weight: 400; color: var(--text); }
-.sec h3 { margin-top: 34px; font-size: 13px; font-weight: 500; }
-.sec h3 b, .fold > summary b { margin-left: 4px; font-weight: 400; color: var(--muted); }
-.sec h3 span, .fold > summary span { margin-left: 10px; font-weight: 400; color: var(--muted); font-size: 12px; }
-.fold { margin-top: 26px; }
-.fold > summary { display: flex; align-items: baseline; flex-wrap: wrap; margin-inline: -8px; padding: 5px 8px; border-radius: 6px; font-size: 13px; font-weight: 500; }
-.fold > summary:hover { background: var(--surface); }
-.fold > summary::after { content: "Show"; margin-left: auto; padding-left: 12px; color: var(--muted); font-size: 12px; font-weight: 400; }
-.fold[open] > summary::after { content: "Hide"; }
-
-/* our words: the thing, and what each side calls it. The names of the sides stay at the top
-   of the window while a table is read. */
-.words { width: 100%; margin-top: 8px; border-collapse: collapse; table-layout: fixed; font-size: 13px; }
-.words col.thing { width: 34%; }
-.words th, .words td { padding: 11px 18px 12px 0; border-top: 1px solid var(--line); vertical-align: top; text-align: left; font-weight: 400; overflow-wrap: anywhere; }
-.words thead th { position: sticky; top: 0; z-index: 1; padding: 8px 18px 6px 0; border-top: 0; background: var(--bg); box-shadow: 0 1px 0 var(--line); color: var(--muted); font-size: 12px; }
-.words tbody tr:first-child > * { border-top: 0; }                    /* the line under the names is theirs */
-.words a { scroll-margin-top: 84px; }                                 /* nothing takes focus under the names: the same margin as in a sheet */
-.words + .fold { margin-top: 10px; }
-.words th strong { display: block; font-size: 14px; font-weight: 500; }
-.words .means { display: block; margin-top: 2px; color: var(--muted); }
-.words .tie { display: block; margin-top: 7px; color: var(--muted); font-size: 12px; }
-.words td ul { display: grid; gap: 4px; }
-.words td i { font-style: normal; color: var(--muted); }
-.words .none { color: var(--muted); }
-.words .col { display: none; font-weight: 400; }
-
-/* a conflict: a line that opens. What goes wrong on the left, every side on the right */
-.x-list { margin-top: 6px; }
-.x > summary { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 16px; align-items: baseline; margin-inline: -8px; padding: 5px 8px; border-radius: 6px; }
-.x > summary:hover, .x[open] > summary { background: var(--surface); }
-.x h4 { font-size: 14px; font-weight: 400; }
-.x > summary .meta { color: var(--muted); font-size: 12px; white-space: nowrap; }
-.x-in { display: grid; grid-template-columns: minmax(0, 34%) minmax(0, 1fr); gap: 4px 44px; padding: 10px 0 24px; }
-.x .wrong { color: var(--muted); font-size: 13px; }
-.x .settle { margin-top: 10px; font-size: 13px; }
-.x .settle .k, .x .wrong .k { display: block; color: var(--muted); font-size: 12px; }
-.in-it { display: flex; flex-wrap: wrap; gap: 0 20px; }
-.sides { display: grid; gap: 9px; align-content: start; font-size: 13px; }
-.sides li { display: grid; grid-template-columns: minmax(0, 15em) minmax(0, 1fr); gap: 2px 18px; }
-.sides .who { color: var(--muted); }
-
-/* every question: its place in line, the question, what one answer settles */
-.qs { margin-top: 6px; }
-.q > summary { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto; gap: 0 10px; align-items: baseline; margin-inline: -8px; padding: 5px 8px; border-radius: 6px; }
-.q > summary b { color: var(--muted); font-size: 12px; font-weight: 400; text-align: right; }
-.q > summary .meta { color: var(--muted); font-size: 12px; white-space: nowrap; }
-.q .more { margin-left: 46px; gap: 12px; }
-.q .more h5 { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 0 16px; max-width: 64ch; margin: 0; font-size: 12px; font-weight: 400; color: var(--muted); }
-.q .roads { margin-top: 6px; }
-.tier { margin: 16px 0 4px 46px; color: var(--muted); font-size: 12px; }
-.tier:first-child { margin-top: 8px; }
-/* a reason questions are held for: how many wait on it, then the reason, as one line that opens */
-.fold.reason { margin-top: 4px; }
-h3 + .fold.reason { margin-top: 8px; }
-.fold.reason > summary { flex-wrap: nowrap; font-weight: 400; }
-.fold.reason > summary b { flex: none; width: 36px; margin: 0 10px 0 0; font-size: 12px; text-align: right; }
-.answers { display: grid; gap: 0; margin-top: 8px; }
-.ans { display: grid; grid-template-columns: minmax(0, 34%) minmax(0, 1fr); gap: 4px 44px; padding: 14px 0 16px; border-top: 1px solid var(--line); font-size: 13px; }
-.ans .asked { font-weight: 500; }
-.ans .meta, .ans .after, .ans p.k { color: var(--muted); font-size: 12px; }
-.ans .meta { margin-top: 4px; }
-.ans blockquote { font-size: 14px; }
-.ans .after { margin-top: 6px; max-width: 78ch; }
-.ans blockquote ~ p.k { margin-top: 12px; }                           /* what the answer settled, under it */
-.ans .reach { margin-top: 2px; }
-.old ul { display: grid; gap: 10px; margin: 8px 0 0; max-width: 88ch; font-size: 13px; }
-.old li span { display: block; color: var(--muted); font-size: 12px; }
-
-/* the rail: the page's own parts, under the Show list */
-.side .here a { height: auto; min-height: 28px; padding-block: 4px; }
-
-/* ---------- narrower windows ---------- */
-@media (max-width: 1100px) {
-  .x-in, .ans { grid-template-columns: minmax(0, 1fr); }
-  .x .sides { margin-top: 12px; }
-  .ans blockquote { margin-top: 4px; }
-}
-@media (max-width: 820px) {
-  .jump { display: flex; flex-wrap: wrap; gap: 2px 18px; margin-top: 12px; color: var(--muted); font-size: 13px; }
-  .desk { margin-top: 20px; }
-  .ask-q { font-size: 19px; }
-  .filter .dims { flex-basis: 100%; padding-top: 4px; }
-  /* The level list is at the top of the page here, and a browser brings a radio it moves to
-     into sight: a pick from the key under the chart would throw the reader up to the top. Away
-     from the keyboard the radios stay with the window, so the page stays where the reader is. */
-  .filter input:not(:focus-visible) { position: fixed; }
-  .lines, .lvl .qref + .lines { margin-left: 40px; }
-  .lvl .lines { margin-left: 0; }
-  .qref, .q > summary { grid-template-columns: 30px minmax(0, 1fr); }
-  .qref i, .q > summary .meta { grid-column: 2; white-space: normal; }
-  .q .more, .tier { margin-left: 0; }
-  .s > summary { grid-template-columns: 12px minmax(0, 1fr); }
-  .s > summary .also { grid-column: 2; white-space: normal; }
-  .more { margin-left: 0; }
-  .x > summary { grid-template-columns: minmax(0, 1fr); }
-  .x > summary .meta { white-space: normal; }
-  .sides li { grid-template-columns: minmax(0, 1fr); }
-  .fold.reason > summary b { width: 30px; }
-  /* a word: its name and meaning, then one line for each side that has a word for it */
-  .words, .words tbody, .words tr, .words th, .words td { display: block; }
-  .words thead, .words colgroup, .words td:has(.none) { display: none; }
-  .words tr { padding: 12px 0; border-top: 1px solid var(--line); }
-  .words tbody tr:first-child { border-top: 0; }
-  .words th, .words td { padding: 0; border: 0; }
-  .words td { display: grid; grid-template-columns: 6.5em minmax(0, 1fr); gap: 8px; margin-top: 8px; }
-  .words .col { display: block; color: var(--muted); font-size: 12px; }
-}
-@media (prefers-reduced-motion: reduce) { .marks { transition: none; } }
-@media print { .area[open] > summary, .words thead th { position: static; } }
+@media print { .area > summary { break-inside: avoid; } }

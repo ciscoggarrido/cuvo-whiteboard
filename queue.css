@@ -1,0 +1,248 @@
+/* The question queue, inside the Sandbox's frame (app.css gives the colours and the type).
+
+   One question stands on the page's own ground, large. The only raised things are what can be
+   pressed: an answer is a filled row, the two answers that are always there are outlined, and
+   everything else is a quiet link. No colour carries meaning here: the frame keeps its green
+   and its yellow for the marks of a state. Claude's suggestion is told apart by words, set in a
+   pocket of the answer it is about.
+
+   Drawn for a phone first. The queue sets itself in two columns when its own box is wide enough
+   (a container query, so it follows the column a page gives it, not the window).
+
+   With no script the page shows .q-plain, the questions as a list. queue.js marks the element
+   data-live once it has built the queue, and moves that list into the fold "All questions". */
+
+.queue {
+  --q-hover: #1c1e22;
+  --q-press: #23262b;
+  --q-r: 9px;
+  container: queue / inline-size;
+  margin-top: 10px;
+}
+.queue [hidden] { display: none !important; }
+.q-vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* a button starts from nothing. :where() keeps this rule weightless, so each kind of button below sets its own */
+:where(.queue) button {
+  margin: 0; padding: 0; border: 0; background: none;
+  font: inherit; color: inherit; text-align: left;
+  cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+}
+.queue [aria-disabled="true"], .queue [disabled] { cursor: default; }
+
+/* ---------- what just happened: the answer that went and its undo. A line of its own that is
+   always there, so nothing below it moves when it speaks or falls silent ---------- */
+.q-said {
+  display: flex; align-items: center; gap: 14px;
+  min-height: 40px; scroll-margin-top: 10px;
+  font-size: 13px;
+}
+/* two lines at most, which is what the line's height holds: a long answer or a reason is not cut short on a phone */
+.q-said-t {
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2;
+  min-width: 0; overflow: hidden; overflow-wrap: anywhere; line-height: 18px; color: var(--muted);
+}
+.q-said-t b { font-weight: 500; color: var(--text); }
+.q-said .q-link { flex: none; color: var(--text); }
+
+/* ---------- where you are: the part, and how many are left ---------- */
+.q-where { color: var(--muted); font-size: 13px; line-height: 20px; }
+.q-where b { font-weight: 500; color: var(--text); }
+
+/* ---------- the card ---------- */
+.q-card { margin-top: 8px; }
+.q-flag { margin-bottom: 8px; color: var(--muted); font-size: 13px; }
+.q-ask {
+  max-width: 21em;
+  font-size: 23px; font-weight: 600; line-height: 1.24; letter-spacing: -.014em;
+  text-wrap: balance;
+}
+.q-ask:focus { outline: none; }             /* it takes the focus so the new question is read out; it is not a control */
+.q-why { max-width: 46ch; margin-top: 10px; color: var(--muted); font-size: 15px; line-height: 1.5; text-wrap: pretty; }
+.q-only { margin-top: 12px; font-weight: 500; }
+.q-side { max-width: 600px; margin-top: 22px; }          /* in one column the answers stay a readable width */
+
+/* an answer: a filled row. Its name, what it adds or drops, and Claude's word where there is one */
+.q-opts { display: grid; gap: 8px; }
+.q-opt {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px;
+  width: 100%; padding: 13px 14px 14px;
+  border-radius: var(--q-r); background: var(--surface);
+}
+.q-opt-t { font-size: 15px; font-weight: 500; line-height: 1.35; }
+.q-opt-e, .q-opt-y, .q-sug { grid-column: 1 / -1; }
+.q-opt-e { margin-top: 3px; color: var(--muted); font-size: 13px; line-height: 1.45; }
+.q-opt-y { margin-top: 6px; font-size: 13px; font-weight: 500; }
+/* Claude's word on the answer it suggests: a pocket cut into the answer, down to the page's own
+   ground. Its text stands on the answer's own left edge; its corners follow the answer's. */
+.q-sug { margin: 11px -8px -8px; padding: 9px 8px 10px; border-radius: 4px; background: var(--bg); font-size: 13px; line-height: 1.45; }
+.q-sug b { font-weight: 600; }
+.q-basis { display: block; margin-top: 2px; color: var(--muted); }
+/* the answer that stands now, while it is being changed: a line round it, as round a picked name */
+.q-opt.q-yours { box-shadow: inset 0 0 0 1.5px var(--text); }
+.q-lead { margin-bottom: 10px; color: var(--muted); font-size: 13px; }
+
+/* the two answers every question has: outlined, so they never pass for a suggestion */
+.q-pair, .q-people { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.q-fix {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  min-height: 46px; padding: 6px 14px;
+  border-radius: var(--q-r); box-shadow: inset 0 0 0 1px var(--track);
+  font-weight: 500; line-height: 1.3;
+}
+.q-fix.q-yours, .q-fix[aria-pressed="true"] { box-shadow: inset 0 0 0 1.5px var(--text); }
+.q-fix .q-opt-y { display: block; margin-top: 1px; font-weight: 400; color: var(--muted); }
+/* hover only where there is a pointer that hovers: on a touch screen it would stick to whatever
+   lands under the last tap when the next question arrives */
+@media (hover: hover) {
+  .q-opt:not([aria-disabled]):hover, .q-fix:not([aria-disabled]):hover { background: var(--q-hover); }
+  .q-link:hover { color: var(--text); text-decoration-color: currentColor; }
+  .q-fold summary:hover { color: var(--text); }
+}
+.q-opt:not([aria-disabled]):active, .q-fix:not([aria-disabled]):active { background: var(--q-press); }
+.q-opt[aria-disabled], .q-fix[aria-disabled] { background: none; box-shadow: inset 0 0 0 1px var(--line); color: var(--muted); }
+
+/* a quiet link, underlined the way the Sandbox underlines its own */
+.q-link {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 40px;
+  color: var(--muted); font-size: 13px;
+  text-decoration: underline; text-decoration-color: var(--faint); text-underline-offset: 3px;
+}
+.q-more { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 4px; }
+.q-foot { margin-top: 16px; padding-bottom: 10px; color: var(--muted); font-size: 12.5px; line-height: 20px; }
+/* a link inside a sentence: 40px to hit, without making its line taller than the lines round it */
+.q-foot .q-link, .q-flag .q-link { display: inline; min-height: 0; margin: -10px 0; padding: 10px 0; font-size: inherit; }
+.q-foot .q-ref { color: var(--text); }
+
+/* a field: a custom answer, a note, a name. 16px, so a phone does not zoom in on it */
+.q-field { display: grid; gap: 6px; margin-top: 12px; }
+.q-field label { color: var(--muted); font-size: 12.5px; }
+.q-text {
+  width: 100%; margin: 0; padding: 10px 12px;
+  border: 1px solid var(--track); border-radius: var(--q-r); background: var(--surface);
+  color: var(--text); font: inherit; font-size: 16px; line-height: 1.4;
+}
+textarea.q-text { display: block; min-height: 96px; resize: vertical; }
+.q-text:focus-visible { outline-offset: 0; border-radius: var(--q-r); }
+.q-row { display: flex; align-items: center; gap: 18px; margin-top: 12px; }
+.q-field .q-row { margin-top: 6px; }
+.queue .q-go { min-height: 44px; padding: 0 16px; border-radius: var(--q-r); background: var(--text); color: var(--bg); font-weight: 600; }
+.queue .q-go[disabled] { opacity: .4; }
+.q-hint { color: var(--muted); font-size: 12.5px; }
+
+/* who is answering: asked once, in the place of the answers. The answer that waits for a name stays in sight above it */
+.q-waits { margin-bottom: 14px; color: var(--muted); font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
+.q-waits b { font-weight: 500; color: var(--text); }
+.q-whose-h { font-size: 15px; font-weight: 600; }
+.q-whose .q-hint { margin-top: 2px; font-size: 13px; }
+.q-people { margin-top: 14px; }
+
+/* a card with nothing to choose from: the end of the queue, or a question that is someone else's
+   to answer. One column, and the one thing to press is as wide as its words */
+.q-lone .q-side { margin-top: 14px; }
+.q-lone .q-pair { grid-template-columns: minmax(0, max-content); margin-top: 0; }
+.q-lone .q-answers:not(:empty) { margin-bottom: 10px; }
+
+/* ---------- the folds under the card ---------- */
+.q-fold { border-top: 1px solid var(--line); }
+.q-card + .q-fold, .q-card + [hidden] + .q-fold { margin-top: 30px; }
+.q-fold:last-of-type { border-bottom: 1px solid var(--line); }
+.q-fold summary {
+  display: flex; align-items: center; gap: 10px; min-height: 44px;
+  color: var(--muted); font-size: 13px; cursor: pointer; list-style: none;
+}
+.q-fold summary::-webkit-details-marker { display: none; }
+.q-fold summary::before {
+  content: ""; flex: none; width: 5px; height: 5px; margin: 0 3px;
+  border: solid currentColor; border-width: 0 1.5px 1.5px 0; transform: rotate(-45deg);
+}
+.q-fold[open] summary::before { transform: translateY(-2px) rotate(45deg); }
+.q-fold[open] summary { color: var(--text); }
+.q-fold summary:focus-visible { outline-offset: -2px; }
+.q-n { margin-left: -4px; }
+
+.q-d { display: grid; gap: 2px; padding: 12px 0 6px; border-top: 1px solid var(--line); }
+.q-d-ask { color: var(--muted); font-size: 13px; }
+.q-d-ans { font-weight: 500; overflow-wrap: anywhere; }
+.q-d-note { display: block; color: var(--muted); font-size: 13px; font-weight: 400; }
+.q-d-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 0 18px; }
+.q-d-back { margin-left: auto; }             /* Take back: at the far end of the row, away from Change */
+.q-d-state { color: var(--muted); font-size: 13px; }
+.q-d-bad { color: var(--text); font-weight: 500; }
+.q-done-foot { padding-bottom: 8px; border-top: 1px solid var(--line); }
+
+/* ---------- every question as a plain list: the page with no script, and the fold "All questions" ---------- */
+.q-plain { max-width: 74ch; padding: 16px 0 6px; }
+.queue[data-live] .q-plain { padding-top: 0; }
+.q-how { color: var(--muted); }
+.queue[data-live] .q-how { display: none; }
+.q-part { margin-top: 24px; }
+.queue[data-live] .q-part:first-of-type { margin-top: 8px; }
+.q-part > h3 { color: var(--muted); font-size: 13px; font-weight: 500; }
+/* the list is numbered 1 to n across its parts: the number stands in a column of its own */
+.q-item { display: grid; grid-template-columns: 26px minmax(0, 1fr); padding: 14px 0; border-bottom: 1px solid var(--line); }
+.q-part:last-child .q-item:last-child { border-bottom: 0; }
+.q-item > * { grid-column: 2; }
+.q-item > .q-item-n { grid-column: 1; grid-row: 1; color: var(--muted); font-size: 13px; line-height: 20px; }
+.q-item h4 { margin: 0; font-size: 15px; font-weight: 600; line-height: 1.35; }
+.q-item .q-why { margin-top: 3px; font-size: 14px; line-height: 1.45; max-width: none; }
+.q-item .q-only { margin-top: 6px; font-size: 14px; }
+.q-item .q-lead { margin: 6px 0 0; }
+.q-item-opts { display: grid; gap: 7px; margin-top: 10px; }
+.q-item-opts li { position: relative; padding-left: 14px; }
+.q-item-opts li::before { content: ""; position: absolute; left: 0; top: .68em; width: 6px; height: 1px; background: var(--muted); }
+.q-item-opts strong { font-weight: 500; }
+.q-item-e, .q-item-b { color: var(--muted); }
+.q-item-s { display: block; margin-top: 2px; font-size: 13px; }
+.q-item-s b { font-weight: 600; }
+.q-item-go { display: flex; flex-wrap: wrap; align-items: center; gap: 0 14px; margin-top: 2px; color: var(--muted); font-size: 13px; }
+
+/* ---------- the keys: 1 to 4, U, C, S, Z. Shown where there is a keyboard, and they can be turned off ---------- */
+.q-key, .q-keys { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .queue[data-keys] .q-key {
+    display: inline-grid; place-items: center; flex: none; align-self: start;
+    min-width: 20px; height: 20px; padding: 0 5px;
+    border-radius: 5px; box-shadow: inset 0 0 0 1px var(--track);
+    color: var(--muted); font: 500 12px/1 Inter, "Segoe UI", system-ui, sans-serif;
+    text-decoration: none;
+  }
+  .queue[data-keys] .q-fix .q-key, .queue[data-keys] .q-link .q-key { align-self: center; }
+  .q-keys { display: block; margin-top: 4px; }
+  .q-keys .q-link { min-height: 32px; font-size: 12px; }
+}
+
+/* ---------- room for two columns: the question on the left, its answers on the right ---------- */
+@container queue (min-width: 860px) {
+  .q-card { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: clamp(40px, 6cqi, 76px); align-items: start; margin-top: 12px; }
+  .q-ask { font-size: 30px; line-height: 1.18; letter-spacing: -.019em; }
+  .q-why { margin-top: 14px; }
+  .q-side { max-width: none; margin-top: 5px; }
+  .q-card.q-lone { display: block; }
+  .q-lone .q-side { margin-top: 18px; }
+  .q-d { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; column-gap: 36px; align-items: baseline; padding: 6px 0; }
+  .q-d-acts { justify-content: flex-end; }
+  .q-d-back { margin-left: 26px; }
+  /* one set of columns for the whole list: the answers stand under each other whatever a row has to offer */
+  @supports (grid-template-columns: subgrid) {
+    .q-done > ul { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; column-gap: 36px; }
+    .q-d { grid-column: 1 / -1; grid-template-columns: subgrid; }
+  }
+}
+
+/* ---------- motion: only what answers a click, and none for a reader who asked for none.
+   A card arrives from below when the queue moves on, and from above when a question comes back ---------- */
+@media (prefers-reduced-motion: no-preference) {
+  .q-opt, .q-fix { transition: background-color .12s; }
+  .q-in .q-asking, .q-in .q-side { animation: q-next .22s cubic-bezier(.2, .7, .2, 1) both; }
+  .q-in .q-side { animation-delay: .04s; }
+  .q-in[data-from="back"] .q-asking, .q-in[data-from="back"] .q-side { animation-name: q-back; }
+  .q-said.q-new > * { animation: q-said .18s ease-out both; }
+  @keyframes q-next { from { opacity: 0; transform: translateY(8px); } }
+  @keyframes q-back { from { opacity: 0; transform: translateY(-8px); } }
+  @keyframes q-said { from { opacity: 0; } }
+}
+@media (forced-colors: active) {
+  .q-opt, .q-fix, .queue .q-go { border: 1px solid ButtonText; }
+  .q-sug { border: 1px solid CanvasText; }
+  .q-opt.q-yours, .q-fix.q-yours, .q-fix[aria-pressed="true"] { border-width: 3px; }
+}

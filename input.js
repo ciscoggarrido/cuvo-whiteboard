@@ -1,75 +1,86 @@
-// The Input page reads, opens and filters without this file.
-// It does what the page cannot do alone: it keeps what is picked in the address (the level
-// shown, and the sheet, line or question last opened), so a view can be sent as a link; it
-// opens whatever the address names, in every browser; and when a sheet is hidden it goes back
-// to the sheet's row in the chart and gives that row the focus, instead of leaving the reader,
-// and the keyboard, further down the page.
-(() => {
-  // With no script a closed sheet that the address names keeps its name on the page, to be
-  // opened by hand where a browser does not open it. Here this file opens it, so the name can
-  // go: input.css takes it away while the page wears this word.
-  document.documentElement.classList.add('scripted');
+/* The page's own glue. Without this file the page still reads and the queue still works:
+   every place a link can name is in the plain list, and every fold and row opens by hand.
 
-  const levels = [...document.querySelectorAll('input[name="show"]')];
-  const put = (address) => { try { history.replaceState(null, '', address); } catch (error) { /* the page stands without it */ } };
-  // what the address names, if it names anything on the page
-  const named = () => {
-    if (location.hash.length < 2) return null;
-    try { return document.getElementById(decodeURIComponent(location.hash.slice(1))); } catch (error) { return null; }
-  };
-  // a sheet wears no name of its own: the address names what it holds
-  const nameOf = (box) => box.id || (box.classList.contains('area') && box.querySelector(':scope > .sheet-in')?.id) || '';
-  const inSight = (thing) => { const at = thing.getBoundingClientRect(); return at.top >= 0 && at.bottom <= innerHeight; };
+   For the rows that open beside the queue: one is open at a time, and the row just opened
+   stays where it was pressed.
 
-  // the level shown: ?show=shaky
-  const asked = new URLSearchParams(location.search).get('show');
-  const level = levels.find((input) => input.id === `f-${asked}`);
-  if (level) level.checked = true;
-  for (const input of levels) {
-    input.addEventListener('change', () => {
-      const address = new URL(location.href);
-      if (input.id === 'f-all') address.searchParams.delete('show');
-      else address.searchParams.set('show', input.id.slice(2));
-      put(address);
+   For the queue, and only once it is running:
+   - the fold that follows the queue joins the queue's own folds, under the list of everything;
+   - a link to one item of that list goes to the card. The list is folded away by then, so the
+     places it kept are kept here instead, and the address finds nothing to open by itself. */
+(function () {
+  'use strict';
+
+  /* Rows that share a name: the browser closes the one that was open when another opens. The
+     page above the new one then gets shorter, so the row is put back where it was pressed.
+     The name is given here and not in the page, because with no script nothing could put the
+     row back: there, rows open and close one by one. */
+  function rows() {
+    function keep(summary, top, more) {
+      requestAnimationFrame(function () {
+        var moved = summary.getBoundingClientRect().top - top;
+        if (Math.abs(moved) > 1) scrollBy(0, moved);
+        if (more) keep(summary, top, more - 1);       /* once more, in case the browser moved the page too */
+      });
+    }
+    document.querySelectorAll('.chart details.area').forEach(function (row) {
+      var summary = row.querySelector('summary');
+      if (!summary) return;
+      row.setAttribute('name', 'area');
+      summary.addEventListener('click', function () {
+        if (!row.open) keep(summary, summary.getBoundingClientRect().top, 1);
+      });
     });
   }
 
-  // what the address names is opened, with everything it sits in
-  let arriving = false;
-  const reveal = () => {
-    const target = named();
-    if (!target) return;
-    arriving = true;
-    for (let box = target; box; box = box.parentElement) if (box.tagName === 'DETAILS') box.open = true;
-    target.scrollIntoView({ block: 'start' });
-    setTimeout(() => { arriving = false; }, 300);
-  };
-  reveal();
-  addEventListener('hashchange', reveal);
+  function queue() {
+    var root = document.querySelector('[data-queue][data-live]');
+    if (!root) return;                            // the queue did not start: the list has every place
+    var all = root.querySelector('.q-all');
+    var held = document.querySelector('.q-held');
+    if (all && held && !root.contains(held)) all.after(held);
 
-  // opened by hand: the address names it. Closed again: it names nothing.
-  document.addEventListener('toggle', (event) => {
-    const box = event.target;
-    const name = nameOf(box);
-    if (arriving || !name) return;
-    if (box.open) {
-      // a browser that opens a box for what the address names says so here before it says the
-      // address changed: the address is already right, and is left alone
-      if (!box.contains(named())) put(`#${name}`);
-      return;
+    var places = {};
+    root.querySelectorAll('.q-plain .q-item[id]').forEach(function (item) {
+      places[item.id] = item;
+      item.removeAttribute('id');
+    });
+    function named(hash) {
+      try { return places[decodeURIComponent(String(hash).slice(1))] || null; } catch (error) { return null; }
     }
-    const sheet = box.classList.contains('area');
-    if (sheet && document.querySelector('.area[open]')) return;      // another sheet took its place
-    if (box.contains(named())) put(location.pathname + location.search);
-    if (!sheet) return;
-    // A sheet hidden: what follows it has slid up in its place, and the name that had the focus
-    // is gone. Back to the row it was opened from: the chart, or on a small screen the row
-    // itself, comes back into sight, and the row takes the focus, so the next Tab goes on from there.
-    const row = document.querySelector(`.chart .row[href="#${name}"]`);
-    if (!row) return;
-    if (!inSight(row)) document.getElementById('picture')?.scrollIntoView({ block: 'start' });
-    if (!inSight(row)) row.scrollIntoView({ block: 'center' });
-    const active = document.activeElement;
-    if (!active || active === document.body || box.contains(active)) row.focus({ preventScroll: true });
-  }, true);
+
+    /* The list offers a way to an item for whoever may act on it: that way is taken. Where it
+       offers none, the list opens at the item, whose own line says why. The item no longer has
+       the id the address names, so it is picked out by a class, until another place is named. */
+    var lit = null;
+    function go() {
+      if (lit) { lit.classList.remove('landed'); lit = null; }
+      var item = named(location.hash);
+      if (!item) return;
+      var way = item.querySelector('.q-item-go button');
+      if (way) { way.click(); return; }
+      if (!all) return;
+      all.open = true;
+      item.classList.add('landed');
+      lit = item;
+      item.scrollIntoView({ block: 'start' });
+    }
+
+    addEventListener('hashchange', go);
+    /* the same link pressed again changes nothing in the address: it still goes there */
+    document.addEventListener('click', function (event) {
+      var link = event.target && event.target.closest ? event.target.closest('a[href^="#"]') : null;
+      if (link && link.hash === location.hash && named(link.hash)) go();
+    });
+    go();
+  }
+
+  function start() {
+    rows();
+    queue();
+  }
+
+  /* the queue's script is listed before this one, so it has started by the time this runs */
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start, { once: true });
+  else start();
 })();

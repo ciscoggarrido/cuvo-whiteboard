@@ -1,411 +1,178 @@
-/* Plan: the roadmap as a railway diagram. Loaded after app.css, on plan.html only.
-   The map is drawn in its own units: --u is one of them, so type and lines keep pace.
-   Colour says how sure and nothing else (--solid --likely --shaky --unknown, doubled by shape).
-   What steps back does it by three numbers multiplied: --o for a pick, --r for a road that is
-   tried, --f for the filter. A line or a mark thins by their product. A name does not: whatever
-   has stepped back at all is set in one ink, --stepped (app.css: never under 3 to 1), because a
-   name that has stepped back is still read and still picked.
-   The rules that set --o and --r are written by build-plan.py, twice: read off the radios with
-   :has() (no script needed), and read off classes plan.js sets on .app. */
+/* This page's own layout, on top of the shared sheet.
+   Three pieces: a grid of four columns in two bands, a list of folds that open to answers set
+   side by side, and a dated list; and in the rail, a link to each of the three. The shared
+   sheet gives the tokens, the marks, the rows and the fold. This one arranges them, and turns
+   the grid for a narrow screen. */
 
-.ln, .sg .cm-g, .dia .d, .nm span, .lf { transition: opacity .15s, color .15s, stroke .15s, fill .15s; }
+/* ---------- two bands on one grid of four columns ----------
+   A band is a head and four columns. A column is a head (a mark, a word, a count) over a rule
+   in the colour of its state, an optional quiet line, and what stands in it. A column with
+   nothing in it, and the last one, keep a neutral rule. Nothing is boxed. */
+.stand > .sec-head + .band { margin-top: var(--s-6); }
+.band + .band { margin-top: var(--s-7); }
+.band > .sec-head { padding-bottom: 0; border-bottom: 0; }
+.band > .sec-head > h3 { font-size: var(--t-lead); }
+.band > .sec-head > p { text-wrap: balance; }           /* two lines of a like length, never one word left over */
 
-/* ---------- the short version: two lines under the title ---------- */
-.plan .promise { max-width: none; }
-/* a link is as tall as a finger needs. A row named in a sentence (.ref) has its 24px from app.css,
-   with the line it stands on; any other link here takes padding that adds no height to its line */
-.plan a:not(.ref), .side .sheet a:not(.ref) { padding: 5px 0; }
-.does, .tens, .waits, .flat { line-height: 24px; }    /* lines made of such names: all of them 24px apart */
-.qh { white-space: nowrap; }                          /* a question's handle never breaks at its dash */
-.app { counter-reset: on hang; }
-.pick.cf { counter-increment: on; }
-.pick.ch { counter-increment: hang; }
-.road { margin-top: 1px; color: var(--muted); line-height: 24px; }
-/* the sentence at rest and the one while a road is tried lie in one place: neither moves the map */
-.count { display: grid; }
-.count > span { grid-area: 1 / 1; }
-.count b { color: var(--text); font-weight: 500; }
-.n-on::after { content: counter(on); }
-.n-hang::after { content: counter(hang); }
-.at-try { visibility: hidden; }
-.app:has(.opt:checked) .at-rest { visibility: hidden; }
-.app:has(.opt:checked) .at-try { visibility: visible; }
-.try i, .road button {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--muted);
-  font: inherit;
-  font-size: 13px;
-  text-decoration: underline;
-  text-decoration-color: var(--faint);
-  text-underline-offset: 3px;
-  cursor: pointer;
-}
-.road button { height: 24px; line-height: 24px; vertical-align: top; }
-.try:hover i, .road button:hover { color: var(--text); text-decoration-color: currentColor; }
-
-/* ---------- the map ---------- */
-.mapwrap { margin-top: 8px; container: mapwrap / inline-size; }
-.app:has(#v-list:checked) .mapwrap > :not(.trying), .app:has(#v-list:checked) .tip { display: none; }
-/* shown where the box is narrower than the map: build-plan.py writes how narrow that is */
-.cut { display: none; margin-bottom: 4px; color: var(--muted); font-size: 13px; line-height: 20px; }
-/* the box starts a little left of the page's edge (build-plan.py says how far), so that a
-   ring fits round the first marks and the marks still line up with the title */
-.mapbox { overflow-x: auto; overflow-y: hidden; scrollbar-width: thin; scrollbar-color: var(--track) transparent; }
-/* the keyboard on the map: its ring when nothing is picked, a heavier ring on the pick. The same
-   two rules read off the radios are written by build-plan.py for a page with no script */
-.mapbox:focus-visible, .app.keys-none .mapbox { outline: 2px solid var(--text); outline-offset: -2px; border-radius: 4px; }
-.app.keys-pick .draw .ring { stroke-width: 2.5px; }
-.filter label.keys { outline: 2px solid var(--text); outline-offset: -2px; }    /* the frame's own ring round a Show label, by a class */
-.pmap { position: relative; container-type: inline-size; }
-.scn { position: absolute; inset: 0; }
-.draw { display: block; width: 100%; height: 100%; overflow: visible; }
-
-.ln {
-  fill: none;
-  stroke: color-mix(in srgb, var(--text) calc(var(--lit, 0) * 100%), var(--way));
-  stroke-width: 1.25px;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  opacity: calc(var(--o, 1) * var(--r, 1) * var(--f, 1));
-}
-.ln.cond { stroke-dasharray: var(--dash, 3 4); }
-.ln.far { stroke-dasharray: 1 4; opacity: max(var(--o, 0), var(--show, 0)); }
-.ln.hd { fill: var(--text); stroke: var(--text); stroke-width: 1px; stroke-dasharray: none; }    /* the arrow of a link that runs against the columns */
-.rule { fill: none; stroke: var(--line); stroke-width: 1px; }
-
-.sg .cm-g, .dia .d { opacity: calc(var(--o, 1) * var(--r, 1) * var(--f, 1)); }
-.sg .pad, .dia .pad { fill: var(--bg); }
-.dia .d { fill: var(--bg); stroke: var(--text); stroke-width: 1.5px; stroke-linejoin: round; }
-.dia.by .d { stroke: var(--muted); stroke-width: 1.25px; }
-.ring { display: none; fill: none; stroke: var(--text); stroke-width: 1.5px; }
-
-/* what lies over the drawing, in the same units: names, heads, the places to pick a fork */
-.nm, .fh, .bh, .tk, .lg { position: absolute; left: calc(var(--x) * var(--u)); top: calc(var(--y) * var(--u)); }
-.nm {
-  min-height: calc(24 * var(--u));
-  padding: calc(4.75 * var(--u)) 0 0 calc(19 * var(--u));
-  font-size: calc(12 * var(--u));
-  line-height: calc(14.5 * var(--u));
-  white-space: nowrap;
-  cursor: pointer;
-  scroll-margin: calc(100vh - 96px) 24px 24px;    /* an address that names a stage leaves the map where it is */
-}
-/* a name steps back by its ink, not its ground: a line never shows through one. The clamp makes
-   it all or nothing: its own ink while the product is 1, the stepped ink for anything under it */
-.nm span {
-  display: inline-block;
-  padding: 0 calc(2 * var(--u));
-  border-radius: 2px;
-  background: var(--bg);
-  color: color-mix(in srgb, var(--nc, var(--text)) clamp(0%, calc((var(--o, 1) * var(--r, 1) * var(--f, 1) - .999) * 100000%), 100%), var(--stepped));
-}
-.nm:hover span { text-decoration: underline; text-decoration-color: var(--faint); text-underline-offset: 3px; }
-.s-now span { font-weight: 600; }
-.s-next span { font-weight: 500; }
-.s-later { --nc: #b7bbc4; }
-.s-done { --nc: var(--muted); }
-@media (scripting: none) { .nm:target span { outline: 1.5px solid var(--text); outline-offset: 1px; } }
-
-/* a fork's place to pick: the whole square of a finger, corners too; the hover shows as its diamond */
-.fh { width: calc(24 * var(--u)); height: calc(24 * var(--u)); transform: translate(-50%, -50%); cursor: pointer; }
-.fh::before { content: ""; position: absolute; inset: 0; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
-.fh:hover::before { background: color-mix(in srgb, var(--text) 10%, transparent); }
-
-.bh {
-  display: flex;
-  align-items: baseline;
-  gap: .6em;
-  width: calc(var(--w) * var(--u));
-  font-size: calc(12 * var(--u));
-  line-height: calc(20 * var(--u));
-  color: var(--muted);
-  white-space: nowrap;
-}
-.bh b { font-size: calc(13 * var(--u)); font-weight: 600; color: var(--text); }
-.bh em { margin-right: .7em; font-style: normal; }
-.bh > i { display: inline-flex; align-items: center; gap: .34em; font-style: normal; }
-.bh .cm, .lk .cm { --cm: calc(9 * var(--u)); }
-.tk { font-size: calc(12 * var(--u)); line-height: calc(14 * var(--u)); color: var(--muted); white-space: nowrap; pointer-events: none; }
-.tk.up { transform: translateY(-100%); }
-
-/* how to read the map. In its free corners: how sure under the work that is done or doing, the
-   forks no stage is tied to and the lines' key under that. And once more under the map (.out),
-   which shows in a window as narrow as a phone's, or where a corner has no room (.only) */
-.lg { width: calc(var(--w) * var(--u)); font-size: calc(12 * var(--u)); line-height: calc(16 * var(--u)); color: var(--muted); }
-.lg.out { display: none; position: static; --u: 1px; flex-wrap: wrap; gap: 14px 56px; width: auto; margin-top: 14px; }
-.lg.out.only { display: flex; }
-.lgh { height: calc(20 * var(--u)); line-height: calc(20 * var(--u)); white-space: nowrap; }
-.gap { height: calc(12 * var(--u)); }
-.loose { margin-bottom: calc(10 * var(--u)); }
-.lf {
-  display: flex;
-  align-items: center;
-  gap: .5em;
-  height: calc(24 * var(--u));
-  color: color-mix(in srgb, #b7bbc4 clamp(0%, calc((var(--o, 1) * var(--f, 1) - .999) * 100000%), 100%), var(--stepped));
-  white-space: nowrap;
-  cursor: pointer;
-}
-.lf:hover { text-decoration: underline; text-decoration-color: var(--faint); text-underline-offset: 3px; }
-.lf .ring { position: absolute; inset: calc(2 * var(--u)) calc(-7 * var(--u)); border: 1.5px solid var(--text); border-radius: 5px; pointer-events: none; }
-.lk li { display: flex; align-items: center; gap: .7em; height: calc(20 * var(--u)); white-space: nowrap; }
-.lk svg { flex: none; width: 2.5em; height: 1.34em; }
-.ks li { gap: .5em; }
-.ks .cm-w { flex: none; min-width: 5.5em; color: var(--text); }
-/* under the map there is no column to keep to: a long line of the key wraps */
-.lg.out .lgh { height: auto; min-height: 20px; white-space: normal; }
-.lg.out .lk li, .lg.out .lf { height: auto; white-space: normal; }
-.lg.out .lk li { min-height: 20px; }
-.lg.out .lf { min-height: 24px; }
-.kl { fill: none; stroke: var(--way); stroke-width: 1.25px; stroke-linecap: round; }
-.kd { stroke-dasharray: 3 3.5; }
-.kt { stroke: var(--text); stroke-dasharray: 1 4; }
-.kh { fill: var(--text); }
-.kf { fill: var(--bg); stroke: var(--text); stroke-width: 1.5px; stroke-linejoin: round; }
-.kb { fill: none; stroke: var(--muted); stroke-width: 1.25px; stroke-linejoin: round; }
-
-/* a fork's own sign in a sentence or a heading: the diamond, small */
-.fd { display: inline-block; flex: none; width: .56em; height: .56em; margin: 0 .5em .08em .2em; border: 1.5px solid currentColor; transform: rotate(45deg); }
-.lf .fd { margin: 0 .2em; }
-
-/* a pick: it, what it waits for and what waits for it stay; the rest steps back. Weightless
-   (:where), so that either form of the rule that keeps a thing lit, :has() or a class, outweighs it */
-.app:has(.pick:checked) :where(.ln:not(.far), .sg, .dia, .nm, .lf) { --o: .34; }
-/* the filter: the levels not asked for step back, and so do the lines and the forks */
-.app:has(#f-solid:checked) :is(.sg, .nm):not([data-c="solid"]),
-.app:has(#f-likely:checked) :is(.sg, .nm):not([data-c="likely"]),
-.app:has(#f-shaky:checked) :is(.sg, .nm):not([data-c="shaky"]),
-.app:has(#f-unknown:checked) :is(.sg, .nm):not([data-c="unknown"]) { --f: .24; }
-.app:has(#f-all:not(:checked)) :is(.ln, .dia, .lf) { --f: .4; }
-/* in the list a row steps back by its ink, never by opacity, which would take the quiet notes in
-   it under what can be read. The same ink is set on a row that is not on the road being tried
-   (build-plan.py writes that rule, with the rest of what a tried road does) */
-.app:has(#f-solid:checked) .list .detail:not([data-c="solid"]),
-.app:has(#f-likely:checked) .list .detail:not([data-c="likely"]),
-.app:has(#f-shaky:checked) .list .detail:not([data-c="shaky"]),
-.app:has(#f-unknown:checked) .list .detail:not([data-c="unknown"]) {
-  color: var(--stepped);
-  --text: var(--stepped);
-  --muted: var(--stepped);
-  --faint: var(--stepped);
-  --cm-thin: var(--stepped-mark);
-}
-
-/* under the map: what is being tried, each road with its way back out */
-.trying { display: none; margin-top: 8px; color: var(--muted); line-height: 24px; }
-.app:has(.opt:checked) .trying { display: block; }
-.try { display: none; min-height: 24px; margin-left: 10px; color: var(--text); cursor: pointer; }
-.try b { font-weight: 500; }
-.try i { font-style: normal; }
-.links { max-width: 88ch; margin-top: 10px; }
-
-/* ---------- the rail: the picked stage or fork ---------- */
-.picks { position: fixed; top: 0; left: 0; width: 0; height: 0; }
-/* the list is read, not picked from: with no map to show a ring on, the keyboard passes the picks by.
-   Hidden from it and still counted: they hold the numbers of the line over the map */
-.app:has(#v-list:checked) .picks { visibility: hidden; }
-.app:has(#p-none:checked) .sheet .intro { display: block; }
-/* each sheet scrolls by itself, so a new pick opens at its top, and nothing is laid over its
-   foot, so the keyboard's ring shows all the way round */
-@media (min-width: 821px) {
-  .side .sheet { display: flex; flex-direction: column; padding: 0; overflow: hidden; border-bottom: 1px solid var(--line); mask-image: none; }
-}
-.side .sheet .detail {
-  flex: 0 1 auto;
-  min-height: 0;
-  padding: 18px 12px 28px;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--track) transparent;
-}
-.side .sheet .detail:focus-visible { outline: 2px solid var(--text); outline-offset: -2px; border-radius: 4px; }
-.side .sheet a { display: inline; height: auto; border-radius: 0; color: inherit; text-decoration: underline; text-decoration-color: var(--faint); text-underline-offset: 3px; }
-.side .sheet a:hover { text-decoration-color: currentColor; }
-.part > p, .about { overflow-wrap: anywhere; }
-.part > p { color: var(--muted); }
-.part > .none { font-size: 12px; }
-.part .cm-w, .where .cm-w { color: var(--text); }
-.ways .cm-w { color: inherit; }
-.part > .ask { color: var(--text); }
-.ask a { text-decoration: underline; text-decoration-color: var(--faint); text-underline-offset: 3px; }
-.ask a:hover { text-decoration-color: currentColor; }
-.who, .flat, .detail > .from { margin-top: 4px; color: var(--muted); font-size: 12px; }
-.who .qh, .qs .qh { color: var(--muted); font-size: 12px; }
-.ways label, .fork h3 label { padding: 3px 0; }
-.ways label { min-width: 24px; }
-.cf h4 label { padding: 4px 0; }
-.detail .close { padding: 4px 6px; }
-.ways s { color: var(--muted); }
-.from q, .from .mx { color: var(--text); }
-/* while a road is tried: which side of it a stage is on, under its state, in the rail and in the
-   list. build-plan.py writes when each shows, with the rest of what a tried road does */
-.rd { display: none; margin-top: 3px; color: var(--text); font-size: 12px; }
-.intro .ways { margin-top: 10px; }
-.part h4 b, .fold h4 b { margin-left: 4px; font-weight: 400; }
-
-/* what a reader can do without at first: one line that opens, with no script (a <details>) */
-.fold > summary {
-  display: flex;
-  align-items: baseline;
-  min-height: 24px;
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 24px;
-  list-style: none;
-  cursor: pointer;
-}
-.fold > summary::-webkit-details-marker { display: none; }
-.fold > summary::after { content: "Show"; flex: none; margin-left: auto; padding-left: 12px; color: var(--muted); font-size: 12px; }
-.fold[open] > summary::after { content: "Hide"; }
-.fold > summary:hover, .fold > summary:hover::after { color: var(--text); }
-.fold > summary > span { min-width: 0; line-height: 18px; padding: 3px 0; }
-.fold > summary h4 { margin: 0; font-size: 12px; font-weight: 400; color: inherit; }
-.fold > p { color: var(--muted); overflow-wrap: anywhere; }
-.fold.part { margin-top: 18px; }
-.fold.part[open] > summary { margin-bottom: 4px; }
-.fold.more { margin-top: 4px; }
-.fold.does { margin-top: 10px; }
-.qs { display: grid; gap: 8px; padding: 4px 0 2px; }
-.qs li { color: var(--text); overflow-wrap: anywhere; }
-
-/* the roads of a fork, to try: in the rail, where the fork is picked */
-.roads { margin-top: 18px; }
-.rhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 28px; color: var(--muted); font-size: 12px; }
-.rhead .o { margin: 0; padding: 0; font-size: 13px; }
-.o { margin: 0 -8px; padding: 2px 8px 4px; border-radius: 6px; }
-.o > label { display: flex; align-items: flex-start; gap: 9px; min-height: 24px; padding: 2px 0; cursor: pointer; }
-/* the radio as it is drawn: a ring, filled when its road is tried. Read off the input beside it */
-.rb { flex: none; width: 14px; height: 14px; margin-top: 2.5px; padding: 2.5px; border: 1.5px solid var(--muted); border-radius: 50%; background: transparent content-box; }
-.o input:checked + .rb { border-color: var(--text); background-color: var(--text); }
-.o.none input:checked + .rb { border-color: var(--muted); background-color: var(--muted); }
-.o input:focus-visible + .rb, .o input.keys + .rb { outline: 2px solid var(--text); outline-offset: 2px; }
-.o > label b { font-weight: 500; }
-.o > label:hover b { text-decoration: underline; text-decoration-color: var(--faint); text-underline-offset: 3px; }
-.o.none b { color: var(--muted); font-weight: 400; }
-.o > p { margin-left: 23px; color: var(--muted); font-size: 13px; }
-.sn { white-space: nowrap; }    /* how sure a named stage is, and where it stands: the bracket and its mark keep to one line */
-.does .ref, .tens .ref:not(.qh), .waits .ref, .flat .ref { color: var(--text); text-decoration-color: transparent; }
-.does .ref:hover, .tens .ref:not(.qh):hover, .waits .ref:hover, .flat .ref:hover { text-decoration-color: currentColor; }
-.roads + .flat { margin-top: 8px; }
-
-/* the roads of a fork, in words */
-.rds { display: grid; gap: 10px; }
-.rds li { margin: 0 -8px; padding: 3px 8px 5px; border-radius: 6px; }
-.rds b { font-weight: 500; }
-.rds p { color: var(--muted); font-size: 13px; overflow-wrap: anywhere; }
-.rds .from { font-size: 12px; }
-.rds + .flat { margin-top: 8px; }
-.side .rds { padding-top: 4px; }
-
-/* ---------- the list ---------- */
-.plan .zone > header { padding-bottom: 10px; border-bottom: 1px solid var(--line); }
-.sure { grid-area: t; color: var(--muted); font-size: 12px; white-space: nowrap; }
-.sure > i { display: inline-flex; align-items: center; gap: 6px; margin-left: 14px; font-style: normal; }
-
-/* ---------- under the map: the forks ahead, the roads closed, the other decisions ----------
-   A section's heading, its short version and the foot are set in app.css, for both pages. */
-.sec { scroll-margin-top: 20px; }
-.sec > header { padding-bottom: 14px; border-bottom: 1px solid var(--line); }
-.sec h2 { display: flex; gap: 8px; }
-.sec h2 b, .grp b, .fidxs h3 b { font-weight: 400; color: var(--muted); }
-/* a second group inside a section */
-.grp { display: flex; gap: 8px; margin-top: 44px; font-size: 14px; font-weight: 600; scroll-margin-top: 20px; }
-.grp + .short + .fork, .grp + .dec { margin-top: 14px; border-top: 1px solid var(--line); }
-
-/* every fork by what it is about: the short version of the section, as a list */
-.fidxs { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.55fr); gap: 14px 48px; padding: 14px 0 16px; border-bottom: 1px solid var(--line); }
-.fidxs h3 { display: flex; gap: 6px; color: var(--muted); font-size: 12px; font-weight: 400; }
-.fidxs > div + div .fidx { columns: 2; column-gap: 36px; }
-.fidx li { display: flex; align-items: baseline; gap: 12px; line-height: 24px; break-inside: avoid; }
-.fidx a { text-decoration-color: transparent; }
-.fidx a:hover { text-decoration-color: currentColor; }
-.fidx span { flex: none; width: 3.2em; color: var(--muted); font-size: 12px; text-align: right; white-space: nowrap; }
-
-.fork, .dec {
-  position: relative;
+.cols {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.55fr);
-  gap: 0 48px;
-  align-items: start;
-  border-bottom: 1px solid var(--line);
-  scroll-margin-top: 20px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-6);
+  margin-top: var(--s-4);
 }
-.fork { padding: 22px 0 22px; }
-.fork h3 { font-size: 15px; font-weight: 600; letter-spacing: -.005em; }
-.fork h3 label { cursor: pointer; }
-.fork h3 label:hover { text-decoration: underline; text-decoration-color: var(--faint); text-underline-offset: 3px; }
-.fork .ask { margin-top: 10px; }
-.waits { margin-top: 8px; color: var(--muted); font-size: 13px; }
-.fork .part { margin-top: 16px; }
-/* the roads of one fork stand side by side */
-.fork .rds { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 36px; align-items: start; }
-.fork .fold > summary { font-size: 13px; }
-.fork .fold[open] > summary { margin-bottom: 6px; }
-.part h4, .cf h4 { margin: 0; }
-.part h4 { margin-bottom: 8px; }
-
-.day { margin-top: 30px; color: var(--muted); font-size: 12px; font-weight: 400; }
-.day + .dec { margin-top: 6px; border-top: 1px solid var(--line); }
-.dec { padding: 16px 0 20px; }
-/* a decision: the words on file lead, what the record adds follows, then who and when and how
-   sure. Where the words are not his own, a quiet line in front of them says whose they are */
-.dec .said { color: var(--text); }
-.dec .said .by { color: var(--muted); }
-.dec .what, .src { margin-top: 6px; color: var(--muted); font-size: 13px; }
-.src { font-size: 12px; }
-.src .on { margin-left: 6px; text-decoration-color: transparent; }
-.src .on:hover { text-decoration-color: currentColor; }
-.dec.plain { display: block; padding: 12px 0 14px; }
-.dec.plain > header { max-width: 88ch; }
-.gone s { color: var(--muted); text-decoration-thickness: 1px; }
-.cf { scroll-margin-top: 20px; position: relative; }
-.cf + .cf { margin-top: 20px; }
-.cf h4 { font-size: 14px; font-weight: 600; }
-.cf h4 label { cursor: pointer; }
-.took, .out { display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 0 12px; margin-top: 8px; }
-.took > b, .out > b { grid-row: 1 / span 5; padding-top: 2px; color: var(--muted); font-size: 12px; font-weight: 400; }
-.took > strong { font-weight: 500; }
-.out > s { color: var(--muted); text-decoration-thickness: 1px; }
-.took > span, .out > span { grid-column: 2; color: var(--muted); font-size: 13px; }
-/* a link from Input lands on one of these: a rule beside it says which */
-:is(.fork, .dec, .cf):target::before { content: ""; position: absolute; top: 0; bottom: 0; left: -12px; width: 2px; background: var(--text); }
-:is(.fork, .dec):target::before { top: 18px; bottom: 20px; }
-
-/* ---------- less room ---------- */
-@media (max-width: 1100px) {
-  .fork, .dec, .fidxs { grid-template-columns: minmax(0, 1fr); gap: 16px 0; }
+.col { min-width: 0; --rule: var(--c); }
+.col[data-s="later"], .col.is-empty { --rule: var(--track); }
+.col-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+  margin: 0;
+  padding-bottom: 9px;
+  border-bottom: 2px solid var(--rule);
+  font-size: var(--t-small);
+  font-weight: 500;
 }
+.col-head .n { color: var(--muted); font-weight: 400; }
+.col-means { margin-top: var(--s-2); color: var(--muted); font-size: var(--t-note); }
+.col-body { margin-top: var(--s-3); }
+
+/* what stands in a column: names that are links, each with at most one quiet line */
+.feats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(148px, 1fr));
+  gap: 10px var(--s-4);
+}
+.feats a { position: relative; display: inline-block; margin-inline: -3px; padding-inline: 3px; font-weight: 500; }
+.feats a::after { content: ""; position: absolute; inset: -4px 0; }     /* more to touch, nothing more to see */
+.feats a:focus-visible { outline-offset: 0; }                           /* the ring keeps off the line under it */
+.feats a:hover { text-decoration: underline; text-decoration-color: var(--muted); text-underline-offset: 3px; }
+.feats small { display: block; color: var(--muted); font-size: var(--t-note); }
+
+/* a sentence that opens a column, over its names. Where its first words name the group, they
+   run in, in the text's ink, so that they are not read as one more name */
+.lead-in { margin-bottom: var(--s-3); color: var(--muted); font-size: var(--t-small); }
+.lead-in strong { margin-right: 2px; color: var(--text); font-weight: 500; }
+
+/* a column, or a list, with nothing in it says so */
+.none { max-width: 34ch; color: var(--muted); font-size: var(--t-small); }
+
+/* what stands in no column: one line under the four, off their grid. Its head, then what
+   the head's word means, then the names. */
+.apart {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--s-2) var(--s-5);
+  margin-top: var(--s-5);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--line);
+}
+.apart .col-head { padding-bottom: 0; border-bottom: 0; }
+.apart .col-means { margin: 0 0 0 calc(var(--s-3) - var(--s-5)); text-align: left; }   /* nearer its head than the names are */
+.apart .feats { display: flex; flex-wrap: wrap; gap: var(--s-2) var(--s-5); }
+
+/* a column of folds: closer together than a page's rows, and what one shows is set small.
+   A link that lands on one leaves a third of the window above it, so that the head of its
+   column is in sight too. */
+.steps { display: grid; gap: 2px; }
+.step { scroll-margin-top: 35vh; }
+.step > summary { padding: 5px 0; }
+.step[open] > summary small { display: none; }          /* opened, what it shows says the same in full */
+.step > .fold-body { padding: 3px 0 var(--s-4) 22px; }
+.facts { display: grid; gap: var(--s-3); margin: 0; font-size: var(--t-small); }
+.facts dt { color: var(--muted); font-size: var(--t-note); }
+.facts dd { margin: 2px 0 0; }
+.facts .link { text-decoration-color: var(--faint); }
+.basis { margin-top: var(--s-3); color: var(--muted); font-size: var(--t-note); }
+
+/* two plain sentences under the grid, each across two of its columns */
+.keeps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-4) var(--s-6);
+  margin-top: var(--s-7);
+  padding-top: var(--s-5);
+  border-top: 1px solid var(--line);
+}
+.keeps p { max-width: 54ch; }
+
+/* ---------- a fold that opens to answers set side by side ----------
+   At rest: a question, and one quiet line where there is one. Opened: a paragraph, then the
+   answers, each under a hairline. The list says how many it holds (n2, n3, n4) and they stand
+   all in one line, or two by two, or one under another: never with one left over. The answer
+   that is suggested carries its reason, set off by a rule at its left. */
+.choice > summary hgroup { display: block; }
+.choice > summary h3 { font-size: var(--t-lead); font-weight: 500; }
+.choice > summary p { margin-top: 2px; color: var(--muted); font-size: var(--t-small); }
+.choice[open] > summary .at-rest { display: none; }
+.choice > .fold-body { padding-top: var(--s-1); padding-bottom: var(--s-6); }
+.why { max-width: 68ch; }
+.label { margin: var(--s-5) 0 var(--s-3); color: var(--muted); font-size: var(--t-note); font-weight: 400; }
+.answers { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--s-4); }
+.answers > li { max-width: 60ch; padding-top: var(--s-3); border-top: 1px solid var(--track); }
+@media (min-width: 601px) {
+  .answers:is(.n2, .n4) { grid-template-columns: repeat(2, minmax(0, 300px)); gap: var(--s-5) var(--s-6); }
+}
+@media (min-width: 1000px) {
+  .answers.n3 { grid-template-columns: repeat(3, minmax(0, 300px)); gap: var(--s-5) var(--s-6); }
+}
+@media (min-width: 1180px) { .answers.n4 { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.answers > .picked { border-top-color: var(--muted); }
+.answers strong { display: block; font-weight: 500; }
+.answers li > span { display: block; margin-top: var(--s-1); color: var(--muted); font-size: var(--t-small); }
+.ours { margin-top: var(--s-3); padding-left: var(--s-3); border-left: 2px solid var(--track); font-size: var(--t-small); }
+.ours b { font-weight: 500; }
+.ours span { display: block; margin-top: 2px; color: var(--muted); }
+.go { margin-top: 18px; font-size: var(--t-small); }
+.go a { display: inline-block; padding-block: 6px; }                    /* more to press */
+
+/* ---------- a dated list ----------
+   The first column says the day, once: a row of the same day as the row above keeps its date,
+   unseen. One quiet word may stand under the day, or in its place. The older rows sit in a
+   fold that lines up with the rows above it. */
+.dated > li > .when { display: grid; align-content: start; }
+.dated > li > .when + span { max-width: 78ch; }
+.dated .sure { font-size: var(--t-note); line-height: 20px; }
+.more { border-top: 1px solid var(--line); }
+.more > summary { color: var(--muted); font-size: var(--t-small); }
+.more > summary:hover { color: var(--text); }
+.more > .fold-body { padding: 0; }
+.more > .fold-body > .dated { border-top: 1px solid var(--line); }
+.key { margin-top: var(--s-4); color: var(--muted); font-size: var(--t-note); }
+.key b { font-weight: 500; }
+
+/* ---------- narrower: the four columns become two by two ----------
+   A column's quiet line moves up beside its head, and the rule runs under both. */
+@media (max-width: 1179px) {
+  .cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .col { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: var(--s-3); align-items: baseline; align-content: start; }
+  .col-head { padding-bottom: var(--s-2); border-bottom: 0; }
+  .col-means { margin-top: 0; text-align: right; }
+  .col-body { grid-column: 1 / -1; margin-top: 0; padding-top: var(--s-3); border-top: 2px solid var(--rule); }
+}
+
+/* ---------- a phone: the grid turns ----------
+   The columns stack in order, each a short section under its own head. Names sit two across
+   where they fit. A dated row sets its day above it. */
+@media (max-width: 600px) {
+  .cols { grid-template-columns: minmax(0, 1fr); gap: var(--s-5); }
+  .band + .band { margin-top: var(--s-6); }
+  .keeps { grid-template-columns: minmax(0, 1fr); margin-top: var(--s-6); }
+  .apart { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 var(--s-3); }
+  .apart .col-means { margin: 0; text-align: right; }
+  .apart .feats { grid-column: 1 / -1; display: grid; margin-top: 10px; gap: 10px var(--s-4); }
+  .dated > li { display: block; }
+  .dated > li > .when { display: flex; gap: var(--s-2); width: auto; margin: 0 0 2px; font-size: var(--t-note); }
+  .dated > li > .when.blank { margin: 0; }
+  .dated time { width: auto; margin: 0; }
+}
+
+/* ---------- the rail's own links, where the rail is the top of the page ----------
+   One row under the row of pages, set a size smaller so that it reads as the second of the
+   two. The label goes, as the frame's own does. */
 @media (max-width: 820px) {
-  .road { margin-top: 10px; }
-  .fork .rds { grid-template-columns: minmax(0, 1fr); }
-  .nm { scroll-margin-top: 30vh; }    /* a stage the address names lands above where its sheet comes up */
-  .list .part:empty { display: none; }    /* in one column the place kept for a question holds nothing */
-  /* the picked stage or fork comes up from the foot of the screen */
-  .app:has(.pick:checked) .side .sheet {
-    display: flex;
-    flex-direction: column;
-    position: fixed;
-    inset: auto 0 0 0;
-    z-index: 5;
-    max-height: 46vh;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    border-top: 1px solid var(--track);
-    background: var(--surface);
-    mask-image: none;
-  }
-  .app:has(.pick:checked) .side .sheet .detail { padding: 16px 16px 20px; }
-  .app:has(.pick:checked) .side .sheet .close { top: -2px; right: 0; padding: 4px 8px; }
-  .app:has(.pick:checked) main { padding-bottom: 52vh; }
-  .app:has(#p-none:checked) .side .sheet { display: none; }
-  /* what takes the keyboard's focus is brought above the sheet. Without this a link that lies
-     under the sheet counts as in view: nothing scrolls, and the focus cannot be seen */
-  :root:has(.pick:checked) { scroll-padding-bottom: 48vh; }
+  .on-page { display: flex; flex-wrap: wrap; gap: 2px; margin-block: -4px; }
+  .on-page h2 { display: none; }
+  .on-page a { font-size: var(--t-note); }
+  .on-page a:focus-visible { outline-offset: -2px; }
 }
-@media (max-width: 560px) {
-  .fidxs > div + div .fidx { columns: 1; }
-}
-@media (prefers-reduced-motion: reduce) { .ln, .sg .cm-g, .dia .d, .nm span, .lf { transition: none; } }

@@ -1,0 +1,269 @@
+/* The front page: only what it adds to the shared sheet.
+   The frame, the tokens, the marks, a section's head, plain rows and the button are the
+   shared sheet's and are used as they are. No script, no motion.
+   Three layouts, by the width of the page's own column:
+     narrow  the picture runs straight down, each label beside its part of it
+     middle  the picture runs across and down, each label under its own tile
+     wide    two columns; the list sits in the corner the picture leaves empty
+   At every width the first section reads in one order: the count, the sentence, the picture,
+   the list. */
+
+.home { --soft: color-mix(in srgb, var(--text) 82%, var(--bg)); --gutter: 56px; }
+main.home { padding-top: 26px; }
+.h-wrap { container: home / inline-size; }
+
+/* ---------- the opening: the one line set large on the whole site ---------- */
+.h-what h1 {
+  max-width: 23em;
+  font-size: 22px;
+  line-height: 1.27;
+  letter-spacing: -.016em;
+  text-wrap: balance;
+}
+.h-what p {
+  max-width: 64ch;
+  margin-top: var(--s-3);
+  font-size: var(--t-lead);
+  line-height: 1.6;
+  color: var(--soft);
+  text-wrap: balance;   /* a short lead: its lines come out even, and none ends it on two words */
+}
+
+/* ---------- the first section ---------- */
+.h-stands { margin-top: var(--s-7); }
+.h-stage { margin-top: 20px; }
+/* The quiet line of its head takes a row of its own, under the name and the count, wherever
+   the column is too narrow to hold the three side by side: the shared sheet does the same on a
+   narrow window, and here the column is also narrow beside the rail. */
+@container home (max-width: 759.9px) {
+  .h-stands > .sec-head { grid-template: "h t" auto "p p" auto "m m" auto / minmax(0, 1fr) auto; gap: 2px 10px; }
+}
+
+/* the sentence comes first, straight under the count it qualifies */
+.h-honest { max-width: 36em; margin-bottom: var(--s-5); font-size: var(--t-head); line-height: 23px; text-wrap: balance; }
+
+/* the picture's name, in a label's own voice */
+.h-cap { margin-bottom: var(--s-2); font-weight: 500; line-height: 21px; }
+
+/* narrow: the picture as a column on the left, as tall as it is long, and the labels in the
+   column beside it, each level with the middle of its own part */
+.h-path {
+  position: relative;
+  display: grid;
+  grid-template-columns: min(44%, 190px) minmax(0, 1fr);
+  column-gap: var(--s-3);
+}
+.h-iso { display: block; width: 100%; height: auto; overflow: visible; }
+.h-row { display: none; }
+.h-fall { grid-area: 1 / 1; aspect-ratio: var(--fall); }
+
+/* The drawing: a tile under each block, a solid block or an outline on it, a line from each
+   to the next. Each wears the colour of its state, the same the marks wear. */
+.h-iso .tile { fill: var(--tile); }
+.h-iso .route g { color: var(--c); }
+.h-iso .route .l { fill: none; stroke: currentColor; stroke-width: 2px; vector-effect: non-scaling-stroke; }
+.h-iso .route .h { fill: currentColor; }
+.h-iso .shade { fill: #000; opacity: .5; }
+.h-iso .wall { fill: color-mix(in srgb, var(--c) 12%, var(--wall)); }
+.h-iso .face {
+  fill: color-mix(in srgb, var(--c) 9%, var(--face));
+  stroke: var(--c);
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+}
+.h-iso .ghost {
+  fill: color-mix(in srgb, var(--c) 5%, var(--tile));
+  stroke: var(--c);
+  stroke-width: 1.5px;
+  vector-effect: non-scaling-stroke;
+}
+/* an outline fills as its mark does: one step further, one step fuller */
+.h-iso [data-s="now"] .ghost { fill: color-mix(in srgb, var(--c) 20%, var(--tile)); }
+.h-iso [data-s="maybe"] .ghost { stroke-dasharray: 5 4; }
+.h-iso .w { fill: #fff; opacity: .09; }
+.h-iso .w2 { fill: #fff; opacity: .2; }
+.h-iso .wo { fill: none; stroke: #fff; stroke-opacity: .17; stroke-width: 1px; vector-effect: non-scaling-stroke; }
+/* a marked line wears the colour of what it is drawn in, so a colour keeps its one meaning */
+.h-iso .wh { fill: var(--c); opacity: .7; }
+/* each part of the drawing leads where its label leads; under a pointer it fills a little more */
+.h-iso a { cursor: pointer; }
+@media (hover: hover) and (forced-colors: none) {
+  .h-iso a:hover .ghost { fill: color-mix(in srgb, var(--c) 13%, var(--tile)); }
+  .h-iso a:hover [data-s="now"] .ghost { fill: color-mix(in srgb, var(--c) 28%, var(--tile)); }
+  .h-iso a:hover .face { fill: color-mix(in srgb, var(--c) 17%, var(--face)); }
+}
+
+.h-steps { grid-area: 1 / 2; position: relative; }
+.h-steps li {
+  position: absolute;
+  inset-inline: 0;
+  top: var(--fy);
+  transform: translateY(-50%);
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr);
+  gap: 0 9px;
+  align-items: start;
+}
+.h-steps .st { margin-top: 3px; }
+.h-steps li > :is(a, span:not(.st)) { justify-self: start; font-weight: 500; }
+/* a label is a link: the whole of it is the thing to press, and under a pointer its words say so */
+.h-steps a::after { content: ""; position: absolute; inset: -6px 0; }
+.h-steps a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.h-steps small { grid-column: 2; color: var(--muted); font-size: var(--t-small); }
+.h-note { grid-area: 2 / 1 / 3 / -1; margin-top: var(--s-3); color: var(--muted); font-size: var(--t-note); }
+
+/* the list beside the picture: it is also the key to the marks */
+.h-states { display: grid; gap: 10px; margin: 26px 0 0; }
+.h-state { display: grid; grid-template-columns: 74px minmax(0, 1fr); gap: 0 10px; }
+.h-state dt { color: var(--muted); font-size: var(--t-small); line-height: 21px; }
+/* a row breaks between two names, never inside one, and does not end on one name alone */
+.h-state dd { margin: 0; line-height: 21px; text-wrap: balance; }
+.h-state dd span { display: inline-block; }   /* held whole; one too long for a line still wraps inside itself */
+.h-state:is([data-s="later"], [data-s="maybe"]) dd { color: var(--muted); }
+
+/* ---------- the second section: one line set larger, one button ---------- */
+.h-ask { margin-top: 20px; }
+.h-lead { margin-bottom: 6px; color: var(--muted); font-size: var(--t-small); }
+.h-first {
+  max-width: 34em;
+  font-size: 19px;
+  line-height: 1.36;
+  font-weight: 500;
+  letter-spacing: -.011em;
+  text-wrap: balance;
+}
+.h-ask .button { margin-top: 20px; }
+
+/* ---------- the two lists at the foot: plain rows ---------- */
+.h-pair { display: grid; gap: 0 var(--gutter); }
+.h-pair .rows { margin-top: var(--s-1); }
+.h-pair .rows span { text-wrap: pretty; }
+.h-pages { --col: 76px; }
+.h-pages a > span { color: var(--muted); }
+
+/* ---------- the type steps up once, and never back down as a window grows ----------
+   From 821 px of window the rail takes its share, so the page's column is narrower at 821
+   than at 820. The larger type starts under the narrowest that column gets there. */
+@container home (min-width: 520px) {
+  .h-what h1 { font-size: var(--t-large); line-height: 1.25; letter-spacing: -.018em; }
+  .h-what p { margin-top: 14px; font-size: var(--t-head); }
+  .h-first { font-size: 20px; }
+}
+
+/* ---------- middle: the picture runs across and down ----------
+   Its top left corner is empty floor, so its name stands over it. Each label leaves the
+   column and hangs under the near edge of its own tile, ending short of the tile's near
+   corner, so it is never nearer the next tile than its own. */
+@container home (min-width: 600px) {
+  .h-stands { margin-top: 52px; }
+  .h-ask { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px 40px; }
+  .h-ask .button { margin-top: 0; }
+
+  /* how far in the picture starts, and how wide it is */
+  .h-stage { --lead: 8cqw; --picw: 92cqw; }
+  .h-cap {
+    position: relative;
+    z-index: 1;
+    max-width: calc(var(--lead) + var(--topx) * var(--picw) - 34px);   /* it ends short of the first tile's far corner */
+    margin-bottom: -16px;                                              /* and the picture's corner comes up under it */
+  }
+  .h-path { display: block; width: var(--picw); margin-left: var(--lead); }
+  .h-row { display: block; }
+  .h-fall { display: none; }
+  .h-steps { position: absolute; inset: 0; pointer-events: none; }   /* it lies over the drawing: a pointer goes through it */
+  .h-steps li {
+    pointer-events: auto;
+    left: calc(-1 * var(--lead));
+    right: calc(100% - var(--x));
+    top: calc(var(--y) + 10px);
+    transform: none;
+    grid-template-columns: 14px auto;
+    width: fit-content;
+    max-width: 17em;      /* a label of thirty letters stays on one line, so the labels step down evenly */
+    margin-left: auto;
+  }
+  .h-steps li:last-child { max-width: 13.5em; }   /* the last label shares its line with the note */
+  .h-steps li > :is(a, span:not(.st)) { text-wrap: balance; }
+  /* the note stands at the foot of the picture's empty side, on the second line of the last
+     label, and stops short of the widest that label can be */
+  .h-note {
+    position: absolute;
+    left: calc(-1 * var(--lead));
+    top: calc(var(--endy) + 30px);
+    max-width: calc(var(--lead) + var(--endx) - 228px);
+    margin: 0;
+    text-wrap: balance;
+  }
+  .h-states { max-width: 560px; margin-top: 76px; }
+}
+@container home (min-width: 760px) {
+  .h-pair { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+
+/* ---------- wide: two columns, and the words sit around the picture ----------
+   The right column is half the page less half the gutter, here and in the lists at the foot.
+   The headline stands in the left one and the lead in the right, on the headline's first
+   baseline.
+   The stage is the same two columns, and both start level, on one baseline: the sentence on
+   the left, the list on the right. Under the sentence come the picture's name and the
+   picture, which runs down to the right, so the corner above its end is empty: the list is
+   in it. The list spans the rows from the top down to where that corner ends (the fourth row
+   is as tall as the corner is deep under the picture's top, less the room kept clear above
+   the drawing: --edge, worked out by the generator from the drawing). A list that runs longer
+   has only the second row to stretch, the empty one above the picture's name: the picture
+   and its name move down together, and nothing meets. */
+@container home (min-width: 900px) {
+  .h-what, .h-stage {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) calc((100% - var(--gutter)) / 2);
+    column-gap: var(--gutter);
+  }
+  .h-what { align-items: first baseline; }
+  .h-what h1 { max-width: none; font-size: var(--t-display); line-height: 1.2; letter-spacing: -.022em; }
+  .h-what p { margin-top: 0; max-width: none; }
+  .h-stands { margin-top: var(--s-7); }
+
+  .h-stage {
+    grid-template-rows: auto 1fr auto calc(var(--edge) * 1cqw - var(--s-5)) auto;
+    margin-top: 0;
+    padding-top: 30px;
+    --lead: calc(var(--inset) * 1cqw);
+    --picw: calc(var(--pic) * 1cqw);
+  }
+  .h-honest { grid-area: 1 / 1; align-self: baseline; max-width: none; margin-bottom: 0; }
+  .h-cap { grid-area: 3 / 1; margin-top: var(--s-5); }
+  .h-states { grid-area: 1 / 2 / 5 / 3; align-self: baseline; max-width: none; margin-top: 0; }
+  .h-path { grid-area: 4 / 1 / 6 / 3; justify-self: start; margin-bottom: 22px; }
+}
+/* wider still, and only for a sentence too long for two lines of its column (the generator
+   says so with a class): it has the room to run across both columns in two lines, so it
+   does, and the list starts under it, level with the picture's name. A shorter sentence, or
+   a list too long for the corner, stays as above. */
+@container home (min-width: 1040px) {
+  .h-across .h-honest { grid-column: 1 / 3; max-width: 36em; }
+  .h-across .h-states { grid-row: 2 / 5; align-self: start; margin-top: var(--s-5); }
+}
+
+@media (min-width: 821px) { main.home { padding-top: var(--s-7); } }
+
+/* Where the system forces its own colours the drawing is redrawn in the system's ink: no
+   floor, an outline for an outline, and a block that keeps its side and takes a heavier edge,
+   so the two are still told apart by shape. The marks beside the labels say the rest. */
+@media (forced-colors: active) {
+  .h-iso .tile, .h-iso .shade { fill: none; }
+  .h-iso .route g { color: CanvasText; }
+  .h-iso .ghost { fill: Canvas; stroke: CanvasText; }
+  .h-iso [data-s="now"] .ghost { fill: color-mix(in srgb, CanvasText 18%, Canvas); }
+  .h-iso .wall { fill: CanvasText; }
+  .h-iso .face { fill: Canvas; stroke: CanvasText; stroke-width: 2.5px; }
+  .h-iso .w, .h-iso .w2, .h-iso .wh { fill: CanvasText; }
+  .h-iso .wo { stroke: CanvasText; stroke-opacity: .4; }
+}
+
+/* On paper the drawing turns light with the shared tokens, and what is drawn in white on a
+   dark block is drawn in black on a light one. */
+@media print {
+  .h-iso .shade { opacity: .12; }
+  .h-iso .w, .h-iso .w2 { fill: #000; }
+  .h-iso .wo { stroke: #000; }
+}
